@@ -1,105 +1,131 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Roboto:wght@400;500;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+/* Sistema de diseño Bolsa de Trabajo UIEPCh
+   Paleta institucional: vino, vino oscuro, crema. Todos los colores en HSL. */
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --background: 32 33% 96%;        /* gris cálido fondo (#f7f3ee) */
+    --foreground: 0 0% 20%;          /* texto principal (#333) */
 
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 0 0% 20%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 0 0% 20%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    /* VINO institucional principal */
+    --primary: 350 66% 32%;          /* #891C2E */
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 350 66% 42%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    /* VINO oscuro (topbar, footer) */
+    --vino-dark: 345 56% 24%;        /* #5F1A2C */
+    --vino-dark-foreground: 39 70% 83%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    /* CREMA (acento institucional) */
+    --crema: 39 70% 83%;             /* #F2DDB6 */
+    --crema-foreground: 345 56% 24%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --secondary: 350 30% 96%;        /* fondo suave rosado (#fdf5f6) */
+    --secondary-foreground: 350 66% 32%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 47%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --accent: 350 30% 96%;
+    --accent-foreground: 350 66% 32%;
 
-    --radius: 0.5rem;
+    --destructive: 354 70% 54%;      /* #DC3545 */
+    --destructive-foreground: 0 0% 100%;
 
-    --sidebar-background: 0 0% 98%;
+    --success: 134 61% 41%;          /* #28A745 */
+    --success-foreground: 0 0% 100%;
 
-    --sidebar-foreground: 240 5.3% 26.1%;
+    --warning: 45 100% 51%;          /* #FFC107 */
+    --warning-foreground: 36 82% 20%;
 
-    --sidebar-primary: 240 5.9% 10%;
+    --info: 207 62% 47%;
+    --info-foreground: 0 0% 100%;
 
-    --sidebar-primary-foreground: 0 0% 98%;
+    --border: 0 0% 90%;              /* #E5E5E5 */
+    --input: 0 0% 90%;
+    --ring: 350 66% 32%;
 
-    --sidebar-accent: 240 4.8% 95.9%;
+    --radius: 0.625rem;
 
-    --sidebar-accent-foreground: 240 5.9% 10%;
+    --shadow-sm: 0 1px 2px hsl(345 30% 10% / 0.05);
+    --shadow-md: 0 4px 12px hsl(345 30% 10% / 0.08);
+    --shadow-card: 0 2px 8px hsl(345 30% 10% / 0.06);
 
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 0 0% 47%;
+    --sidebar-primary: 350 66% 32%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 350 30% 96%;
+    --sidebar-accent-foreground: 350 66% 32%;
+    --sidebar-border: 0 0% 90%;
+    --sidebar-ring: 350 66% 32%;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
+    --background: 0 0% 8%;
+    --foreground: 0 0% 95%;
+    --card: 0 0% 12%;
+    --card-foreground: 0 0% 95%;
+    --popover: 0 0% 12%;
+    --popover-foreground: 0 0% 95%;
+    --primary: 350 66% 42%;
+    --primary-foreground: 0 0% 100%;
+    --vino-dark: 345 56% 24%;
+    --vino-dark-foreground: 39 70% 83%;
+    --crema: 39 70% 83%;
+    --crema-foreground: 345 56% 24%;
+    --secondary: 0 0% 18%;
+    --secondary-foreground: 0 0% 95%;
+    --muted: 0 0% 18%;
+    --muted-foreground: 0 0% 65%;
+    --accent: 0 0% 18%;
+    --accent-foreground: 0 0% 95%;
+    --destructive: 354 70% 54%;
+    --destructive-foreground: 0 0% 100%;
+    --success: 134 61% 41%;
+    --success-foreground: 0 0% 100%;
+    --warning: 45 100% 51%;
+    --warning-foreground: 36 82% 20%;
+    --border: 0 0% 22%;
+    --input: 0 0% 22%;
+    --ring: 350 66% 42%;
+    --sidebar-background: 0 0% 12%;
+    --sidebar-foreground: 0 0% 75%;
+    --sidebar-primary: 350 66% 42%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-accent: 0 0% 18%;
+    --sidebar-accent-foreground: 0 0% 95%;
+    --sidebar-border: 0 0% 22%;
+    --sidebar-ring: 350 66% 42%;
   }
 }
 
 @layer base {
-  * {
-    @apply border-border;
-  }
-
+  * { @apply border-border; }
+  html { font-family: 'Roboto', system-ui, sans-serif; }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+  h1, h2, h3, h4, h5, h6, .font-display {
+    font-family: 'Poppins', system-ui, sans-serif;
+    @apply font-semibold tracking-tight;
+  }
+}
+
+@layer components {
+  .badge-pill {
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium font-display;
   }
 }
