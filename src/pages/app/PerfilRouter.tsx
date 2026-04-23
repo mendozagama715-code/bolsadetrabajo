@@ -1,7 +1,7 @@
 import { useAuth } from "@/lib/auth-context";
 import PerfilEgresado from "./egresado/Perfil";
 import PerfilEmpresa from "./empresa/PerfilEmpresa";
-import { Placeholder } from "./Placeholder";
+import Placeholder from "./Placeholder";
 
 export default function PerfilRouter() {
   const { role } = useAuth();
