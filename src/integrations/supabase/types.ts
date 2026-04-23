@@ -14,16 +14,351 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      egresados: {
+        Row: {
+          anio_egreso: number | null
+          carrera: string | null
+          created_at: string
+          cv_url: string | null
+          estado: Database["public"]["Enums"]["estado_validacion"]
+          experiencia: string | null
+          habilidades: string[] | null
+          id: string
+          matricula: string | null
+          motivo_rechazo: string | null
+          ubicacion: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          anio_egreso?: number | null
+          carrera?: string | null
+          created_at?: string
+          cv_url?: string | null
+          estado?: Database["public"]["Enums"]["estado_validacion"]
+          experiencia?: string | null
+          habilidades?: string[] | null
+          id?: string
+          matricula?: string | null
+          motivo_rechazo?: string | null
+          ubicacion?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          anio_egreso?: number | null
+          carrera?: string | null
+          created_at?: string
+          cv_url?: string | null
+          estado?: Database["public"]["Enums"]["estado_validacion"]
+          experiencia?: string | null
+          habilidades?: string[] | null
+          id?: string
+          matricula?: string | null
+          motivo_rechazo?: string | null
+          ubicacion?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      empresas: {
+        Row: {
+          created_at: string
+          descripcion: string | null
+          direccion: string | null
+          estado: Database["public"]["Enums"]["estado_validacion"]
+          giro: string | null
+          id: string
+          logo_url: string | null
+          motivo_rechazo: string | null
+          razon_social: string
+          responsable: string | null
+          rfc: string
+          sitio_web: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          descripcion?: string | null
+          direccion?: string | null
+          estado?: Database["public"]["Enums"]["estado_validacion"]
+          giro?: string | null
+          id?: string
+          logo_url?: string | null
+          motivo_rechazo?: string | null
+          razon_social: string
+          responsable?: string | null
+          rfc: string
+          sitio_web?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          descripcion?: string | null
+          direccion?: string | null
+          estado?: Database["public"]["Enums"]["estado_validacion"]
+          giro?: string | null
+          id?: string
+          logo_url?: string | null
+          motivo_rechazo?: string | null
+          razon_social?: string
+          responsable?: string | null
+          rfc?: string
+          sitio_web?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      eventos_seguimiento: {
+        Row: {
+          created_at: string
+          descripcion: string | null
+          empresa_id: string
+          fecha: string
+          hora: string | null
+          id: string
+          postulacion_id: string | null
+          tipo: Database["public"]["Enums"]["tipo_evento"]
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          descripcion?: string | null
+          empresa_id: string
+          fecha: string
+          hora?: string | null
+          id?: string
+          postulacion_id?: string | null
+          tipo?: Database["public"]["Enums"]["tipo_evento"]
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          descripcion?: string | null
+          empresa_id?: string
+          fecha?: string
+          hora?: string | null
+          id?: string
+          postulacion_id?: string | null
+          tipo?: Database["public"]["Enums"]["tipo_evento"]
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "eventos_seguimiento_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "eventos_seguimiento_postulacion_id_fkey"
+            columns: ["postulacion_id"]
+            isOneToOne: false
+            referencedRelation: "postulaciones"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      postulaciones: {
+        Row: {
+          created_at: string
+          egresado_id: string
+          estado: Database["public"]["Enums"]["estado_postulacion"]
+          id: string
+          mensaje: string | null
+          notas_empresa: string | null
+          updated_at: string
+          vacante_id: string
+        }
+        Insert: {
+          created_at?: string
+          egresado_id: string
+          estado?: Database["public"]["Enums"]["estado_postulacion"]
+          id?: string
+          mensaje?: string | null
+          notas_empresa?: string | null
+          updated_at?: string
+          vacante_id: string
+        }
+        Update: {
+          created_at?: string
+          egresado_id?: string
+          estado?: Database["public"]["Enums"]["estado_postulacion"]
+          id?: string
+          mensaje?: string | null
+          notas_empresa?: string | null
+          updated_at?: string
+          vacante_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "postulaciones_egresado_id_fkey"
+            columns: ["egresado_id"]
+            isOneToOne: false
+            referencedRelation: "egresados"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "postulaciones_vacante_id_fkey"
+            columns: ["vacante_id"]
+            isOneToOne: false
+            referencedRelation: "vacantes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          id: string
+          nombre: string
+          telefono: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          id?: string
+          nombre: string
+          telefono?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          id?: string
+          nombre?: string
+          telefono?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      vacantes: {
+        Row: {
+          area: string | null
+          carrera_solicitada: string | null
+          created_at: string
+          descripcion: string
+          empresa_id: string
+          estado: Database["public"]["Enums"]["estado_vacante"]
+          fecha_cierre: string | null
+          id: string
+          puesto: string
+          requisitos: string | null
+          salario_max: number | null
+          salario_min: number | null
+          tipo_contrato: Database["public"]["Enums"]["tipo_contrato"]
+          ubicacion: string | null
+          updated_at: string
+        }
+        Insert: {
+          area?: string | null
+          carrera_solicitada?: string | null
+          created_at?: string
+          descripcion: string
+          empresa_id: string
+          estado?: Database["public"]["Enums"]["estado_vacante"]
+          fecha_cierre?: string | null
+          id?: string
+          puesto: string
+          requisitos?: string | null
+          salario_max?: number | null
+          salario_min?: number | null
+          tipo_contrato?: Database["public"]["Enums"]["tipo_contrato"]
+          ubicacion?: string | null
+          updated_at?: string
+        }
+        Update: {
+          area?: string | null
+          carrera_solicitada?: string | null
+          created_at?: string
+          descripcion?: string
+          empresa_id?: string
+          estado?: Database["public"]["Enums"]["estado_vacante"]
+          fecha_cierre?: string | null
+          id?: string
+          puesto?: string
+          requisitos?: string | null
+          salario_max?: number | null
+          salario_min?: number | null
+          tipo_contrato?: Database["public"]["Enums"]["tipo_contrato"]
+          ubicacion?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vacantes_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_egresado_id_for_user: { Args: { _user_id: string }; Returns: string }
+      get_empresa_id_for_user: { Args: { _user_id: string }; Returns: string }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "egresado" | "empresa" | "admin"
+      estado_postulacion:
+        | "pendiente"
+        | "en_revision"
+        | "entrevista"
+        | "contratado"
+        | "rechazado"
+      estado_vacante: "activa" | "cerrada"
+      estado_validacion: "pendiente" | "aprobado" | "rechazado"
+      tipo_contrato:
+        | "tiempo_completo"
+        | "medio_tiempo"
+        | "por_proyecto"
+        | "practicas"
+      tipo_evento: "contacto" | "entrevista" | "contratacion" | "otro"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +485,24 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["egresado", "empresa", "admin"],
+      estado_postulacion: [
+        "pendiente",
+        "en_revision",
+        "entrevista",
+        "contratado",
+        "rechazado",
+      ],
+      estado_vacante: ["activa", "cerrada"],
+      estado_validacion: ["pendiente", "aprobado", "rechazado"],
+      tipo_contrato: [
+        "tiempo_completo",
+        "medio_tiempo",
+        "por_proyecto",
+        "practicas",
+      ],
+      tipo_evento: ["contacto", "entrevista", "contratacion", "otro"],
+    },
   },
 } as const
