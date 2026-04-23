@@ -1,0 +1,93 @@
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth-context";
+import { PageHeader } from "@/components/PageHeader";
+import { StatusBadge } from "@/components/StatusBadge";
+import { toast } from "sonner";
+import { FileText, Trash2 } from "lucide-react";
+
+interface Postulacion {
+  id: string;
+  estado: string;
+  mensaje: string | null;
+  created_at: string;
+  vacantes: {
+    puesto: string;
+    ubicacion: string | null;
+    empresas: { razon_social: string } | null;
+  } | null;
+}
+
+export default function Postulaciones() {
+  const { egresadoId } = useAuth();
+  const [items, setItems] = useState<Postulacion[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const load = async () => {
+    if (!egresadoId) return;
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("postulaciones")
+      .select("id, estado, mensaje, created_at, vacantes(puesto, ubicacion, empresas(razon_social))")
+      .eq("egresado_id", egresadoId)
+      .order("created_at", { ascending: false });
+    if (error) toast.error("Error cargando postulaciones");
+    setItems((data as any) ?? []);
+    setLoading(false);
+  };
+
+  useEffect(() => { load(); }, [egresadoId]);
+
+  const retirar = async (id: string) => {
+    if (!confirm("¿Retirar esta postulación?")) return;
+    const { error } = await supabase.from("postulaciones").delete().eq("id", id);
+    if (error) return toast.error("No se pudo retirar");
+    toast.success("Postulación retirada");
+    setItems(items.filter((i) => i.id !== id));
+  };
+
+  return (
+    <div>
+      <PageHeader title="Mis postulaciones" subtitle="Sigue el estado de las vacantes a las que has postulado" />
+      {loading ? (
+        <div className="text-center text-sm text-muted-foreground py-12">Cargando...</div>
+      ) : items.length === 0 ? (
+        <div className="bg-card border border-dashed border-border rounded-xl p-12 text-center">
+          <FileText size={32} className="mx-auto text-muted-foreground mb-3" />
+          <p className="text-sm text-muted-foreground">Aún no has postulado a ninguna vacante</p>
+        </div>
+      ) : (
+        <div className="bg-card border border-border rounded-xl shadow-card overflow-hidden">
+          <table className="w-full text-sm">
+            <thead className="bg-secondary/50">
+              <tr className="text-left text-xs font-display text-muted-foreground uppercase">
+                <th className="px-4 py-3">Puesto</th>
+                <th className="px-4 py-3">Empresa</th>
+                <th className="px-4 py-3">Fecha</th>
+                <th className="px-4 py-3">Estado</th>
+                <th className="px-4 py-3 w-12"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {items.map((p) => (
+                <tr key={p.id} className="border-t border-border hover:bg-secondary/30">
+                  <td className="px-4 py-3 font-medium">{p.vacantes?.puesto ?? "—"}</td>
+                  <td className="px-4 py-3 text-muted-foreground">{p.vacantes?.empresas?.razon_social ?? "—"}</td>
+                  <td className="px-4 py-3 text-muted-foreground">{new Date(p.created_at).toLocaleDateString()}</td>
+                  <td className="px-4 py-3"><StatusBadge estado={p.estado} /></td>
+                  <td className="px-4 py-3">
+                    {(p.estado === "pendiente" || p.estado === "en_revision") && (
+                      <button onClick={() => retirar(p.id)} className="text-muted-foreground hover:text-destructive" title="Retirar">
+                        <Trash2 size={16} />
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
