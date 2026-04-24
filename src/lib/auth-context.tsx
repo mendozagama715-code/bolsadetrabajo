@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useState, ReactNode } from "react
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
-export type AppRole = "egresado" | "empresa" | "admin";
+export type AppRole = "egresado" | "empresa" | "admin" | "super_admin";
 
 interface ProfileLite {
   nombre: string | null;
@@ -48,8 +48,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     ]);
     setProfile(profRes.data ?? null);
     const roles = (rolesRes.data ?? []).map((r) => r.role as AppRole);
-    // Prioridad: admin > empresa > egresado
-    const r: AppRole | null = roles.includes("admin")
+    // Prioridad: super_admin > admin > empresa > egresado
+    const r: AppRole | null = roles.includes("super_admin")
+      ? "super_admin"
+      : roles.includes("admin")
       ? "admin"
       : roles.includes("empresa")
       ? "empresa"
