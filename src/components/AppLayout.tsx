@@ -4,7 +4,7 @@ import { Logo } from "./Logo";
 import { useAuth, AppRole } from "@/lib/auth-context";
 import {
   LayoutDashboard, Briefcase, FileText, User, LogOut,
-  PlusSquare, Users, Calendar, BarChart3, Building2, ShieldCheck,
+  PlusSquare, Users, Calendar, BarChart3, Building2, ShieldCheck, UserPlus,
 } from "lucide-react";
 import { Footer } from "./PublicNav";
 
@@ -40,6 +40,20 @@ const NAV: Record<AppRole, { section: string; items: NavItem[] }[]> = {
       { to: "/app/admin/usuarios", label: "Gestión usuarios", icon: <Users size={16} /> },
       { to: "/app/admin/vacantes", label: "Gestión vacantes", icon: <Briefcase size={16} /> },
       { to: "/app/admin/reportes", label: "Reportes", icon: <BarChart3 size={16} /> },
+      { to: "/app/admin/crear-admin", label: "Crear administrador", icon: <UserPlus size={16} /> },
+    ]},
+    { section: "Cuenta", items: [
+      { to: "/app/perfil", label: "Mi perfil", icon: <User size={16} /> },
+    ]},
+  ],
+  super_admin: [
+    { section: "Super administración", items: [
+      { to: "/app", label: "Dashboard", icon: <LayoutDashboard size={16} /> },
+      { to: "/app/admin/empresas", label: "Validar empresas", icon: <ShieldCheck size={16} /> },
+      { to: "/app/admin/usuarios", label: "Gestión usuarios", icon: <Users size={16} /> },
+      { to: "/app/admin/vacantes", label: "Gestión vacantes", icon: <Briefcase size={16} /> },
+      { to: "/app/admin/reportes", label: "Reportes", icon: <BarChart3 size={16} /> },
+      { to: "/app/admin/crear-admin", label: "Crear administrador", icon: <UserPlus size={16} /> },
     ]},
     { section: "Cuenta", items: [
       { to: "/app/perfil", label: "Mi perfil", icon: <User size={16} /> },
@@ -60,8 +74,10 @@ export function AppLayout({ children }: { children: ReactNode }) {
       <header className="h-[52px] bg-vino-dark px-6 flex items-center gap-4 shrink-0">
         <Logo />
         <div className="ml-auto flex items-center gap-3">
-          {role === "admin" && (
-            <span className="font-display text-[9px] bg-crema text-vino-dark px-2 py-0.5 rounded-full font-bold">ADMIN</span>
+          {(role === "admin" || role === "super_admin") && (
+            <span className="font-display text-[9px] bg-crema text-vino-dark px-2 py-0.5 rounded-full font-bold">
+              {role === "super_admin" ? "SUPER ADMIN" : "ADMIN"}
+            </span>
           )}
           <div className="w-8 h-8 rounded-full bg-crema text-vino-dark flex items-center justify-center font-display text-[11px] font-semibold">
             {initials}

@@ -27,6 +27,7 @@ import ValidacionEmpresas from "./pages/app/admin/ValidacionEmpresas.tsx";
 import GestionUsuarios from "./pages/app/admin/GestionUsuarios.tsx";
 import GestionVacantes from "./pages/app/admin/GestionVacantes.tsx";
 import Reportes from "./pages/app/admin/Reportes.tsx";
+import CrearAdmin from "./pages/app/admin/CrearAdmin.tsx";
 
 const queryClient = new QueryClient();
 
@@ -59,11 +60,12 @@ const App = () => (
             <Route path="/app/postulantes" element={<Wrapped><RequireRole roles={["empresa"]}><Postulantes /></RequireRole></Wrapped>} />
             <Route path="/app/calendario" element={<Wrapped><RequireRole roles={["empresa"]}><Calendario /></RequireRole></Wrapped>} />
 
-            {/* Admin */}
-            <Route path="/app/admin/empresas" element={<Wrapped><RequireRole roles={["admin"]}><ValidacionEmpresas /></RequireRole></Wrapped>} />
-            <Route path="/app/admin/usuarios" element={<Wrapped><RequireRole roles={["admin"]}><GestionUsuarios /></RequireRole></Wrapped>} />
-            <Route path="/app/admin/vacantes" element={<Wrapped><RequireRole roles={["admin"]}><GestionVacantes /></RequireRole></Wrapped>} />
-            <Route path="/app/admin/reportes" element={<Wrapped><RequireRole roles={["admin"]}><Reportes /></RequireRole></Wrapped>} />
+            {/* Admin / Super admin */}
+            <Route path="/app/admin/empresas" element={<Wrapped><RequireRole roles={["admin","super_admin"]}><ValidacionEmpresas /></RequireRole></Wrapped>} />
+            <Route path="/app/admin/usuarios" element={<Wrapped><RequireRole roles={["admin","super_admin"]}><GestionUsuarios /></RequireRole></Wrapped>} />
+            <Route path="/app/admin/vacantes" element={<Wrapped><RequireRole roles={["admin","super_admin"]}><GestionVacantes /></RequireRole></Wrapped>} />
+            <Route path="/app/admin/reportes" element={<Wrapped><RequireRole roles={["admin","super_admin"]}><Reportes /></RequireRole></Wrapped>} />
+            <Route path="/app/admin/crear-admin" element={<Wrapped><RequireRole roles={["admin","super_admin"]}><CrearAdmin /></RequireRole></Wrapped>} />
 
             <Route path="/app/perfil" element={<Wrapped><PerfilRouter /></Wrapped>} />
 

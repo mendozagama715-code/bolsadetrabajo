@@ -2,15 +2,16 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth-context";
 import { PublicNav, Footer } from "@/components/PublicNav";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { GraduationCap, Building2, Loader2 } from "lucide-react";
+import { GraduationCap, Building2, ShieldCheck, Loader2 } from "lucide-react";
 
 type Tab = "login" | "signup";
-type Rol = "egresado" | "empresa";
+type Rol = "egresado" | "empresa" | "admin";
 
 const loginSchema = z.object({
   email: z.string().email("Correo inválido").max(255),
@@ -21,6 +22,7 @@ const signupSchema = z.object({
   nombre: z.string().trim().min(2, "Nombre requerido").max(120),
   email: z.string().email("Correo inválido").max(255),
   password: z.string().min(6, "Mínimo 6 caracteres").max(128),
+  confirm: z.string().optional(),
   rfc: z.string().trim().max(20).optional(),
 });
 
@@ -29,9 +31,11 @@ export default function Auth() {
   const [rol, setRol] = useState<Rol>("egresado");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { role: currentRole } = useAuth();
+  const canCreateAdmin = currentRole === "admin" || currentRole === "super_admin";
 
   const [li, setLi] = useState({ email: "", password: "" });
-  const [su, setSu] = useState({ nombre: "", email: "", password: "", rfc: "" });
+  const [su, setSu] = useState({ nombre: "", email: "", password: "", confirm: "", rfc: "" });
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,6 +54,34 @@ export default function Auth() {
     const r = signupSchema.safeParse(su);
     if (!r.success) { toast.error(r.error.errors[0].message); return; }
     if (rol === "empresa" && !r.data.rfc) { toast.error("RFC requerido para empresas"); return; }
+
+    // === Rama administrador (POST a edge function /create-admin) ===
+    if (rol === "admin") {
+      if (!canCreateAdmin) { toast.error("No tienes permisos"); return; }
+      if (r.data.password.length < 8) { toast.error("Mínimo 8 caracteres para administrador"); return; }
+      if (r.data.password !== su.confirm) { toast.error("Las contraseñas no coinciden"); return; }
+      setLoading(true);
+      const { data: resp, error } = await supabase.functions.invoke("create-admin", {
+        body: {
+          nombre: r.data.nombre,
+          email: r.data.email,
+          password: r.data.password,
+          password_confirmation: su.confirm,
+          rol: "admin",
+          tipo_registro: "admin",
+        },
+      });
+      setLoading(false);
+      if (error) {
+        const msg = (resp as any)?.error || error.message;
+        if (msg?.toLowerCase().includes("permis")) toast.error("No tienes permisos");
+        else toast.error(msg ?? "No se pudo crear");
+        return;
+      }
+      toast.success("Administrador creado con éxito");
+      setSu({ nombre: "", email: "", password: "", confirm: "", rfc: "" });
+      return;
+    }
 
     setLoading(true);
     const redirectUrl = `${window.location.origin}/app`;
@@ -157,11 +189,19 @@ export default function Auth() {
             ) : (
               <form onSubmit={handleSignup} className="space-y-3.5">
                 <h3 className="font-display text-lg font-semibold">Crear cuenta</h3>
-                <p className="text-sm text-muted-foreground -mt-2">¿Eres egresado o empresa?</p>
+                <p className="text-sm text-muted-foreground -mt-2">
+                  {canCreateAdmin ? "¿Eres egresado, empresa o administrador?" : "¿Eres egresado o empresa?"}
+                </p>
 
-                <div className="grid grid-cols-2 gap-2.5">
-                  {([["egresado", "Egresado", GraduationCap], ["empresa", "Empresa", Building2]] as const).map(([r, lbl, Icon]) => (
-                    <button type="button" key={r} onClick={() => setRol(r)}
+                <div className={`grid ${canCreateAdmin ? "grid-cols-3" : "grid-cols-2"} gap-2.5`}>
+                  {(
+                    [
+                      ["egresado", "Egresado", GraduationCap],
+                      ["empresa", "Empresa", Building2],
+                      ...(canCreateAdmin ? [["admin", "Administrador", ShieldCheck] as const] : []),
+                    ] as const
+                  ).map(([r, lbl, Icon]) => (
+                    <button type="button" key={r} onClick={() => setRol(r as Rol)}
                       className={`border-[1.5px] rounded-lg p-3 transition ${
                         rol === r ? "border-primary bg-secondary" : "border-border hover:border-primary/40"
                       }`}>
@@ -176,7 +216,9 @@ export default function Auth() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label>{rol === "empresa" ? "Razón social" : "Nombre completo"}</Label>
+                  <Label>
+                    {rol === "empresa" ? "Razón social" : "Nombre completo"}
+                  </Label>
                   <Input value={su.nombre} onChange={(e) => setSu({ ...su, nombre: e.target.value })}
                     placeholder={rol === "empresa" ? "Empresa S.A. de C.V." : "Tu nombre completo"} />
                 </div>
@@ -188,8 +230,15 @@ export default function Auth() {
                 <div className="space-y-1.5">
                   <Label>Contraseña</Label>
                   <Input type="password" value={su.password} onChange={(e) => setSu({ ...su, password: e.target.value })}
-                    placeholder="••••••••" />
+                    placeholder={rol === "admin" ? "Mínimo 8 caracteres" : "••••••••"} />
                 </div>
+                {rol === "admin" && (
+                  <div className="space-y-1.5">
+                    <Label>Confirmar contraseña</Label>
+                    <Input type="password" value={su.confirm} onChange={(e) => setSu({ ...su, confirm: e.target.value })}
+                      placeholder="Repite la contraseña" />
+                  </div>
+                )}
                 {rol === "empresa" && (
                   <>
                     <div className="space-y-1.5">
@@ -207,8 +256,14 @@ export default function Auth() {
                     Tu cuenta queda pendiente de validación por el administrador antes de postularte.
                   </div>
                 )}
+                {rol === "admin" && (
+                  <div className="text-[11px] bg-secondary border-l-2 border-primary text-foreground/80 rounded-r p-2.5">
+                    Estás creando una cuenta administrativa. La cuenta queda activa de inmediato.
+                  </div>
+                )}
                 <Button type="submit" disabled={loading} className="w-full">
-                  {loading && <Loader2 className="animate-spin" size={16} />} Crear cuenta
+                  {loading && <Loader2 className="animate-spin" size={16} />}{" "}
+                  {rol === "admin" ? "Crear administrador" : "Crear cuenta"}
                 </Button>
               </form>
             )}
