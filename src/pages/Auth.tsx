@@ -22,6 +22,7 @@ const signupSchema = z.object({
   nombre: z.string().trim().min(2, "Nombre requerido").max(120),
   email: z.string().email("Correo inválido").max(255),
   password: z.string().min(6, "Mínimo 6 caracteres").max(128),
+  confirm: z.string().optional(),
   rfc: z.string().trim().max(20).optional(),
 });
 
@@ -53,6 +54,34 @@ export default function Auth() {
     const r = signupSchema.safeParse(su);
     if (!r.success) { toast.error(r.error.errors[0].message); return; }
     if (rol === "empresa" && !r.data.rfc) { toast.error("RFC requerido para empresas"); return; }
+
+    // === Rama administrador (POST a edge function /create-admin) ===
+    if (rol === "admin") {
+      if (!canCreateAdmin) { toast.error("No tienes permisos"); return; }
+      if (r.data.password.length < 8) { toast.error("Mínimo 8 caracteres para administrador"); return; }
+      if (r.data.password !== su.confirm) { toast.error("Las contraseñas no coinciden"); return; }
+      setLoading(true);
+      const { data: resp, error } = await supabase.functions.invoke("create-admin", {
+        body: {
+          nombre: r.data.nombre,
+          email: r.data.email,
+          password: r.data.password,
+          password_confirmation: su.confirm,
+          rol: "admin",
+          tipo_registro: "admin",
+        },
+      });
+      setLoading(false);
+      if (error) {
+        const msg = (resp as any)?.error || error.message;
+        if (msg?.toLowerCase().includes("permis")) toast.error("No tienes permisos");
+        else toast.error(msg ?? "No se pudo crear");
+        return;
+      }
+      toast.success("Administrador creado con éxito");
+      setSu({ nombre: "", email: "", password: "", confirm: "", rfc: "" });
+      return;
+    }
 
     setLoading(true);
     const redirectUrl = `${window.location.origin}/app`;
