@@ -189,11 +189,19 @@ export default function Auth() {
             ) : (
               <form onSubmit={handleSignup} className="space-y-3.5">
                 <h3 className="font-display text-lg font-semibold">Crear cuenta</h3>
-                <p className="text-sm text-muted-foreground -mt-2">¿Eres egresado o empresa?</p>
+                <p className="text-sm text-muted-foreground -mt-2">
+                  {canCreateAdmin ? "¿Eres egresado, empresa o administrador?" : "¿Eres egresado o empresa?"}
+                </p>
 
-                <div className="grid grid-cols-2 gap-2.5">
-                  {([["egresado", "Egresado", GraduationCap], ["empresa", "Empresa", Building2]] as const).map(([r, lbl, Icon]) => (
-                    <button type="button" key={r} onClick={() => setRol(r)}
+                <div className={`grid ${canCreateAdmin ? "grid-cols-3" : "grid-cols-2"} gap-2.5`}>
+                  {(
+                    [
+                      ["egresado", "Egresado", GraduationCap],
+                      ["empresa", "Empresa", Building2],
+                      ...(canCreateAdmin ? [["admin", "Administrador", ShieldCheck] as const] : []),
+                    ] as const
+                  ).map(([r, lbl, Icon]) => (
+                    <button type="button" key={r} onClick={() => setRol(r as Rol)}
                       className={`border-[1.5px] rounded-lg p-3 transition ${
                         rol === r ? "border-primary bg-secondary" : "border-border hover:border-primary/40"
                       }`}>
@@ -208,7 +216,9 @@ export default function Auth() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label>{rol === "empresa" ? "Razón social" : "Nombre completo"}</Label>
+                  <Label>
+                    {rol === "empresa" ? "Razón social" : "Nombre completo"}
+                  </Label>
                   <Input value={su.nombre} onChange={(e) => setSu({ ...su, nombre: e.target.value })}
                     placeholder={rol === "empresa" ? "Empresa S.A. de C.V." : "Tu nombre completo"} />
                 </div>
@@ -220,8 +230,15 @@ export default function Auth() {
                 <div className="space-y-1.5">
                   <Label>Contraseña</Label>
                   <Input type="password" value={su.password} onChange={(e) => setSu({ ...su, password: e.target.value })}
-                    placeholder="••••••••" />
+                    placeholder={rol === "admin" ? "Mínimo 8 caracteres" : "••••••••"} />
                 </div>
+                {rol === "admin" && (
+                  <div className="space-y-1.5">
+                    <Label>Confirmar contraseña</Label>
+                    <Input type="password" value={su.confirm} onChange={(e) => setSu({ ...su, confirm: e.target.value })}
+                      placeholder="Repite la contraseña" />
+                  </div>
+                )}
                 {rol === "empresa" && (
                   <>
                     <div className="space-y-1.5">
@@ -239,8 +256,14 @@ export default function Auth() {
                     Tu cuenta queda pendiente de validación por el administrador antes de postularte.
                   </div>
                 )}
+                {rol === "admin" && (
+                  <div className="text-[11px] bg-secondary border-l-2 border-primary text-foreground/80 rounded-r p-2.5">
+                    Estás creando una cuenta administrativa. La cuenta queda activa de inmediato.
+                  </div>
+                )}
                 <Button type="submit" disabled={loading} className="w-full">
-                  {loading && <Loader2 className="animate-spin" size={16} />} Crear cuenta
+                  {loading && <Loader2 className="animate-spin" size={16} />}{" "}
+                  {rol === "admin" ? "Crear administrador" : "Crear cuenta"}
                 </Button>
               </form>
             )}
