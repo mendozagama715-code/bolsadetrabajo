@@ -2,15 +2,16 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth-context";
 import { PublicNav, Footer } from "@/components/PublicNav";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { GraduationCap, Building2, Loader2 } from "lucide-react";
+import { GraduationCap, Building2, ShieldCheck, Loader2 } from "lucide-react";
 
 type Tab = "login" | "signup";
-type Rol = "egresado" | "empresa";
+type Rol = "egresado" | "empresa" | "admin";
 
 const loginSchema = z.object({
   email: z.string().email("Correo inválido").max(255),
@@ -29,9 +30,11 @@ export default function Auth() {
   const [rol, setRol] = useState<Rol>("egresado");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { role: currentRole } = useAuth();
+  const canCreateAdmin = currentRole === "admin" || currentRole === "super_admin";
 
   const [li, setLi] = useState({ email: "", password: "" });
-  const [su, setSu] = useState({ nombre: "", email: "", password: "", rfc: "" });
+  const [su, setSu] = useState({ nombre: "", email: "", password: "", confirm: "", rfc: "" });
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
