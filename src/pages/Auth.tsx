@@ -237,11 +237,26 @@ export default function Auth() {
                     placeholder={rol === "admin" ? "Mínimo 8 caracteres" : "••••••••"} />
                 </div>
                 {rol === "admin" && (
-                  <div className="space-y-1.5">
-                    <Label>Confirmar contraseña</Label>
-                    <Input type="password" value={su.confirm} onChange={(e) => setSu({ ...su, confirm: e.target.value })}
-                      placeholder="Repite la contraseña" />
-                  </div>
+                  <>
+                    <div className="space-y-1.5">
+                      <Label>Confirmar contraseña</Label>
+                      <Input type="password" value={su.confirm} onChange={(e) => setSu({ ...su, confirm: e.target.value })}
+                        placeholder="Repite la contraseña" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label>Área / Departamento</Label>
+                      <Input value={su.area} onChange={(e) => setSu({ ...su, area: e.target.value })}
+                        placeholder="Ej. Coordinación de Vinculación" />
+                    </div>
+                    {!canCreateAdmin && (
+                      <div className="space-y-1.5">
+                        <Label>Código de acceso institucional</Label>
+                        <Input type="password" value={su.access_code}
+                          onChange={(e) => setSu({ ...su, access_code: e.target.value })}
+                          placeholder="Proporcionado por la institución" />
+                      </div>
+                    )}
+                  </>
                 )}
                 {rol === "empresa" && (
                   <>
