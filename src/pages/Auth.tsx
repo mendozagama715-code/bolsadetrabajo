@@ -35,7 +35,7 @@ export default function Auth() {
   const canCreateAdmin = currentRole === "admin" || currentRole === "super_admin";
 
   const [li, setLi] = useState({ email: "", password: "" });
-  const [su, setSu] = useState({ nombre: "", email: "", password: "", confirm: "", rfc: "" });
+  const [su, setSu] = useState({ nombre: "", email: "", password: "", confirm: "", rfc: "", area: "", access_code: "" });
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,9 +57,12 @@ export default function Auth() {
 
     // === Rama administrador (POST a edge function /create-admin) ===
     if (rol === "admin") {
-      if (!canCreateAdmin) { toast.error("No tienes permisos"); return; }
       if (r.data.password.length < 8) { toast.error("Mínimo 8 caracteres para administrador"); return; }
       if (r.data.password !== su.confirm) { toast.error("Las contraseñas no coinciden"); return; }
+      if (!canCreateAdmin) {
+        if (!su.access_code.trim()) { toast.error("Ingresa el código de acceso institucional"); return; }
+        if (!su.area.trim()) { toast.error("Indica el área / departamento"); return; }
+      }
       setLoading(true);
       const { data: resp, error } = await supabase.functions.invoke("create-admin", {
         body: {
@@ -68,18 +71,19 @@ export default function Auth() {
           password: r.data.password,
           password_confirmation: su.confirm,
           rol: "admin",
-          tipo_registro: "admin",
+          area: su.area,
+          access_code: canCreateAdmin ? "" : su.access_code,
         },
       });
       setLoading(false);
       if (error) {
         const msg = (resp as any)?.error || error.message;
-        if (msg?.toLowerCase().includes("permis")) toast.error("No tienes permisos");
-        else toast.error(msg ?? "No se pudo crear");
+        toast.error(msg ?? "No se pudo crear");
         return;
       }
-      toast.success("Administrador creado con éxito");
-      setSu({ nombre: "", email: "", password: "", confirm: "", rfc: "" });
+      toast.success("Cuenta de administrador creada. Inicia sesión.");
+      setSu({ nombre: "", email: "", password: "", confirm: "", rfc: "", area: "", access_code: "" });
+      setTab("login");
       return;
     }
 
@@ -190,15 +194,15 @@ export default function Auth() {
               <form onSubmit={handleSignup} className="space-y-3.5">
                 <h3 className="font-display text-lg font-semibold">Crear cuenta</h3>
                 <p className="text-sm text-muted-foreground -mt-2">
-                  {canCreateAdmin ? "¿Eres egresado, empresa o administrador?" : "¿Eres egresado o empresa?"}
+                  ¿Eres egresado, empresa o administrador?
                 </p>
 
-                <div className={`grid ${canCreateAdmin ? "grid-cols-3" : "grid-cols-2"} gap-2.5`}>
+                <div className="grid grid-cols-3 gap-2.5">
                   {(
                     [
                       ["egresado", "Egresado", GraduationCap],
                       ["empresa", "Empresa", Building2],
-                      ...(canCreateAdmin ? [["admin", "Administrador", ShieldCheck] as const] : []),
+                      ["admin", "Administrador", ShieldCheck],
                     ] as const
                   ).map(([r, lbl, Icon]) => (
                     <button type="button" key={r} onClick={() => setRol(r as Rol)}
@@ -233,11 +237,26 @@ export default function Auth() {
                     placeholder={rol === "admin" ? "Mínimo 8 caracteres" : "••••••••"} />
                 </div>
                 {rol === "admin" && (
-                  <div className="space-y-1.5">
-                    <Label>Confirmar contraseña</Label>
-                    <Input type="password" value={su.confirm} onChange={(e) => setSu({ ...su, confirm: e.target.value })}
-                      placeholder="Repite la contraseña" />
-                  </div>
+                  <>
+                    <div className="space-y-1.5">
+                      <Label>Confirmar contraseña</Label>
+                      <Input type="password" value={su.confirm} onChange={(e) => setSu({ ...su, confirm: e.target.value })}
+                        placeholder="Repite la contraseña" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label>Área / Departamento</Label>
+                      <Input value={su.area} onChange={(e) => setSu({ ...su, area: e.target.value })}
+                        placeholder="Ej. Coordinación de Vinculación" />
+                    </div>
+                    {!canCreateAdmin && (
+                      <div className="space-y-1.5">
+                        <Label>Código de acceso institucional</Label>
+                        <Input type="password" value={su.access_code}
+                          onChange={(e) => setSu({ ...su, access_code: e.target.value })}
+                          placeholder="Proporcionado por la institución" />
+                      </div>
+                    )}
+                  </>
                 )}
                 {rol === "empresa" && (
                   <>
@@ -257,8 +276,8 @@ export default function Auth() {
                   </div>
                 )}
                 {rol === "admin" && (
-                  <div className="text-[11px] bg-secondary border-l-2 border-primary text-foreground/80 rounded-r p-2.5">
-                    Estás creando una cuenta administrativa. La cuenta queda activa de inmediato.
+                  <div className="text-[11px] bg-warning/15 border-l-2 border-warning text-warning-foreground rounded-r p-2.5">
+                    El registro de administrador requiere autorización institucional. Necesitas el código de acceso proporcionado por la coordinación.
                   </div>
                 )}
                 <Button type="submit" disabled={loading} className="w-full">
