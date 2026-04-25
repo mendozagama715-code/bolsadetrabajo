@@ -57,9 +57,12 @@ export default function Auth() {
 
     // === Rama administrador (POST a edge function /create-admin) ===
     if (rol === "admin") {
-      if (!canCreateAdmin) { toast.error("No tienes permisos"); return; }
       if (r.data.password.length < 8) { toast.error("Mínimo 8 caracteres para administrador"); return; }
       if (r.data.password !== su.confirm) { toast.error("Las contraseñas no coinciden"); return; }
+      if (!canCreateAdmin) {
+        if (!su.access_code.trim()) { toast.error("Ingresa el código de acceso institucional"); return; }
+        if (!su.area.trim()) { toast.error("Indica el área / departamento"); return; }
+      }
       setLoading(true);
       const { data: resp, error } = await supabase.functions.invoke("create-admin", {
         body: {
@@ -68,18 +71,19 @@ export default function Auth() {
           password: r.data.password,
           password_confirmation: su.confirm,
           rol: "admin",
-          tipo_registro: "admin",
+          area: su.area,
+          access_code: canCreateAdmin ? "" : su.access_code,
         },
       });
       setLoading(false);
       if (error) {
         const msg = (resp as any)?.error || error.message;
-        if (msg?.toLowerCase().includes("permis")) toast.error("No tienes permisos");
-        else toast.error(msg ?? "No se pudo crear");
+        toast.error(msg ?? "No se pudo crear");
         return;
       }
-      toast.success("Administrador creado con éxito");
-      setSu({ nombre: "", email: "", password: "", confirm: "", rfc: "" });
+      toast.success("Cuenta de administrador creada. Inicia sesión.");
+      setSu({ nombre: "", email: "", password: "", confirm: "", rfc: "", area: "", access_code: "" });
+      setTab("login");
       return;
     }
 
