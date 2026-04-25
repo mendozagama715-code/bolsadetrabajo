@@ -76,14 +76,24 @@ export default function Dashboard() {
       <p className="text-sm text-muted-foreground mt-0.5 mb-6">{subtitulo}</p>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        {stats.map((s) => (
-          <div key={s.label} className="bg-card border border-border rounded-xl p-5 shadow-card">
-            <div className="text-xs text-muted-foreground font-display mb-1.5">{s.label}</div>
-            <div className={`font-display text-3xl font-semibold ${s.accent ? "text-primary" : "text-foreground"}`}>
-              {s.value}
-            </div>
-          </div>
-        ))}
+        {stats.map((s) => {
+          const content = (
+            <>
+              <div className="text-xs text-muted-foreground font-display mb-1.5">{s.label}</div>
+              <div className={`font-display text-3xl font-semibold ${s.accent ? "text-primary" : "text-foreground"}`}>
+                {s.value}
+              </div>
+            </>
+          );
+          const base = "bg-card border border-border rounded-xl p-5 shadow-card transition-all";
+          return s.to ? (
+            <Link key={s.label} to={s.to} className={`${base} block hover:border-primary hover:shadow-md hover:-translate-y-0.5`}>
+              {content}
+            </Link>
+          ) : (
+            <div key={s.label} className={base}>{content}</div>
+          );
+        })}
       </div>
 
       <div className="bg-card border border-dashed border-border rounded-xl p-10 text-center">
