@@ -217,6 +217,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          area: string | null
           avatar_url: string | null
           created_at: string
           id: string
@@ -226,6 +227,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          area?: string | null
           avatar_url?: string | null
           created_at?: string
           id?: string
@@ -235,6 +237,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          area?: string | null
           avatar_url?: string | null
           created_at?: string
           id?: string
