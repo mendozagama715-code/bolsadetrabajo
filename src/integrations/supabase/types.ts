@@ -167,6 +167,39 @@ export type Database = {
           },
         ]
       }
+      notificaciones: {
+        Row: {
+          created_at: string
+          enlace: string | null
+          id: string
+          leida: boolean
+          mensaje: string
+          tipo: Database["public"]["Enums"]["tipo_notificacion"]
+          titulo: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          enlace?: string | null
+          id?: string
+          leida?: boolean
+          mensaje: string
+          tipo?: Database["public"]["Enums"]["tipo_notificacion"]
+          titulo: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          enlace?: string | null
+          id?: string
+          leida?: boolean
+          mensaje?: string
+          tipo?: Database["public"]["Enums"]["tipo_notificacion"]
+          titulo?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       postulaciones: {
         Row: {
           created_at: string
@@ -363,6 +396,7 @@ export type Database = {
         | "por_proyecto"
         | "practicas"
       tipo_evento: "contacto" | "entrevista" | "contratacion" | "otro"
+      tipo_notificacion: "info" | "exito" | "advertencia" | "error"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -507,6 +541,7 @@ export const Constants = {
         "practicas",
       ],
       tipo_evento: ["contacto", "entrevista", "contratacion", "otro"],
+      tipo_notificacion: ["info", "exito", "advertencia", "error"],
     },
   },
 } as const
