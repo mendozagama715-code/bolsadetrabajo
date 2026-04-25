@@ -4,6 +4,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { StatusBadge } from "@/components/StatusBadge";
 import { toast } from "sonner";
 import { Check, X, Eye } from "lucide-react";
+import { crearNotificacion } from "@/lib/notifications";
 
 interface Egresado {
   id: string; user_id: string; carrera: string | null; matricula: string | null;
@@ -46,10 +47,22 @@ export default function GestionUsuarios() {
   };
   useEffect(() => { load(); }, [tab, filter]);
 
-  const cambiarEstado = async (id: string, nuevo: "aprobado" | "rechazado") => {
+  const cambiarEstado = async (item: any, nuevo: "aprobado" | "rechazado") => {
     const tabla = tab === "egresados" ? "egresados" : "empresas";
-    const { error } = await supabase.from(tabla).update({ estado: nuevo, motivo_rechazo: null } as any).eq("id", id);
+    const { error } = await supabase.from(tabla).update({ estado: nuevo, motivo_rechazo: null } as any).eq("id", item.id);
     if (error) return toast.error("Error");
+    const esEgresado = tab === "egresados";
+    await crearNotificacion({
+      user_id: item.user_id,
+      titulo: nuevo === "aprobado"
+        ? (esEgresado ? "¡Tu cuenta fue aprobada!" : "¡Tu empresa fue aprobada!")
+        : (esEgresado ? "Tu cuenta fue rechazada" : "Tu empresa fue rechazada"),
+      mensaje: nuevo === "aprobado"
+        ? (esEgresado ? "Ya puedes postularte a vacantes en la bolsa de trabajo." : "Ya puedes publicar vacantes en la bolsa de trabajo.")
+        : "Contacta al administrador para más información.",
+      tipo: nuevo === "aprobado" ? "exito" : "error",
+      enlace: "/app",
+    });
     toast.success(`${nuevo === "aprobado" ? "Aprobado" : "Rechazado"}`);
     setSelected(null);
     load();
@@ -113,8 +126,8 @@ export default function GestionUsuarios() {
                   <td className="px-4 py-3">
                     <div className="flex justify-end gap-3">
                       <button onClick={() => verDetalle(it)} className="text-muted-foreground hover:text-primary" title="Ver detalle"><Eye size={16} /></button>
-                      {it.estado !== "aprobado" && <button onClick={() => cambiarEstado(it.id, "aprobado")} className="text-success hover:opacity-70" title="Aprobar"><Check size={16} /></button>}
-                      {it.estado !== "rechazado" && <button onClick={() => cambiarEstado(it.id, "rechazado")} className="text-destructive hover:opacity-70" title="Rechazar"><X size={16} /></button>}
+                      {it.estado !== "aprobado" && <button onClick={() => cambiarEstado(it, "aprobado")} className="text-success hover:opacity-70" title="Aprobar"><Check size={16} /></button>}
+                      {it.estado !== "rechazado" && <button onClick={() => cambiarEstado(it, "rechazado")} className="text-destructive hover:opacity-70" title="Rechazar"><X size={16} /></button>}
                     </div>
                   </td>
                 </tr>
@@ -169,10 +182,10 @@ export default function GestionUsuarios() {
             <div className="p-4 border-t border-border flex justify-end gap-2">
               <button onClick={() => setSelected(null)} className="px-4 h-10 rounded-lg border border-border text-sm font-display hover:bg-secondary">Cerrar</button>
               {selected.estado !== "rechazado" && (
-                <button onClick={() => cambiarEstado(selected.id, "rechazado")} className="px-4 h-10 rounded-lg bg-destructive text-destructive-foreground text-sm font-display font-medium">Rechazar</button>
+                <button onClick={() => cambiarEstado(selected, "rechazado")} className="px-4 h-10 rounded-lg bg-destructive text-destructive-foreground text-sm font-display font-medium">Rechazar</button>
               )}
               {selected.estado !== "aprobado" && (
-                <button onClick={() => cambiarEstado(selected.id, "aprobado")} className="px-4 h-10 rounded-lg bg-success text-success-foreground text-sm font-display font-medium">Aprobar</button>
+                <button onClick={() => cambiarEstado(selected, "aprobado")} className="px-4 h-10 rounded-lg bg-success text-success-foreground text-sm font-display font-medium">Aprobar</button>
               )}
             </div>
           </div>

@@ -4,9 +4,10 @@ import { PageHeader } from "@/components/PageHeader";
 import { StatusBadge } from "@/components/StatusBadge";
 import { toast } from "sonner";
 import { Check, X, Eye } from "lucide-react";
+import { crearNotificacion } from "@/lib/notifications";
 
 interface Empresa {
-  id: string; razon_social: string; rfc: string; giro: string | null;
+  id: string; user_id: string; razon_social: string; rfc: string; giro: string | null;
   estado: string; motivo_rechazo: string | null; descripcion: string | null;
   sitio_web: string | null; direccion: string | null; responsable: string | null;
   created_at: string;
@@ -26,9 +27,16 @@ export default function ValidacionEmpresas() {
   };
   useEffect(() => { load(); }, [filter]);
 
-  const aprobar = async (id: string) => {
-    const { error } = await supabase.from("empresas").update({ estado: "aprobado", motivo_rechazo: null }).eq("id", id);
+  const aprobar = async (emp: Empresa) => {
+    const { error } = await supabase.from("empresas").update({ estado: "aprobado", motivo_rechazo: null }).eq("id", emp.id);
     if (error) return toast.error("Error");
+    await crearNotificacion({
+      user_id: emp.user_id,
+      titulo: "¡Tu empresa fue aprobada!",
+      mensaje: `${emp.razon_social} ya puede publicar vacantes en la bolsa de trabajo.`,
+      tipo: "exito",
+      enlace: "/app",
+    });
     toast.success("Empresa aprobada");
     setSelected(null); load();
   };
@@ -36,6 +44,13 @@ export default function ValidacionEmpresas() {
     if (!selected || !motivo) return toast.error("Indica el motivo");
     const { error } = await supabase.from("empresas").update({ estado: "rechazado", motivo_rechazo: motivo }).eq("id", selected.id);
     if (error) return toast.error("Error");
+    await crearNotificacion({
+      user_id: selected.user_id,
+      titulo: "Solicitud de empresa rechazada",
+      mensaje: `Motivo: ${motivo}`,
+      tipo: "error",
+      enlace: "/app",
+    });
     toast.success("Empresa rechazada");
     setSelected(null); setMotivo(""); load();
   };
@@ -81,7 +96,7 @@ export default function ValidacionEmpresas() {
                       <button onClick={() => setSelected(e)} className="text-muted-foreground hover:text-primary"><Eye size={16} /></button>
                       {e.estado === "pendiente" && (
                         <>
-                          <button onClick={() => aprobar(e.id)} className="text-success hover:opacity-70"><Check size={16} /></button>
+                          <button onClick={() => aprobar(e)} className="text-success hover:opacity-70"><Check size={16} /></button>
                           <button onClick={() => setSelected(e)} className="text-destructive hover:opacity-70"><X size={16} /></button>
                         </>
                       )}
@@ -123,7 +138,7 @@ export default function ValidacionEmpresas() {
               {selected.estado === "pendiente" && (
                 <>
                   <button onClick={rechazar} className="px-4 h-10 rounded-lg bg-destructive text-destructive-foreground text-sm font-display font-medium">Rechazar</button>
-                  <button onClick={() => aprobar(selected.id)} className="px-4 h-10 rounded-lg bg-success text-success-foreground text-sm font-display font-medium">Aprobar</button>
+                  <button onClick={() => aprobar(selected)} className="px-4 h-10 rounded-lg bg-success text-success-foreground text-sm font-display font-medium">Aprobar</button>
                 </>
               )}
             </div>

@@ -7,6 +7,7 @@ import {
   PlusSquare, Users, Calendar, BarChart3, Building2, ShieldCheck, UserPlus,
 } from "lucide-react";
 import { Footer } from "./PublicNav";
+import { NotificationsBell } from "./NotificationsBell";
 
 interface NavItem { to: string; label: string; icon: ReactNode; }
 
@@ -74,6 +75,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
       <header className="h-[52px] bg-vino-dark px-6 flex items-center gap-4 shrink-0">
         <Logo />
         <div className="ml-auto flex items-center gap-3">
+          <NotificationsBell />
           {(role === "admin" || role === "super_admin") && (
             <span className="font-display text-[9px] bg-crema text-vino-dark px-2 py-0.5 rounded-full font-bold">
               {role === "super_admin" ? "SUPER ADMIN" : "ADMIN"}
