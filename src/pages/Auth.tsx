@@ -194,15 +194,15 @@ export default function Auth() {
               <form onSubmit={handleSignup} className="space-y-3.5">
                 <h3 className="font-display text-lg font-semibold">Crear cuenta</h3>
                 <p className="text-sm text-muted-foreground -mt-2">
-                  {canCreateAdmin ? "¿Eres egresado, empresa o administrador?" : "¿Eres egresado o empresa?"}
+                  ¿Eres egresado, empresa o administrador?
                 </p>
 
-                <div className={`grid ${canCreateAdmin ? "grid-cols-3" : "grid-cols-2"} gap-2.5`}>
+                <div className="grid grid-cols-3 gap-2.5">
                   {(
                     [
                       ["egresado", "Egresado", GraduationCap],
                       ["empresa", "Empresa", Building2],
-                      ...(canCreateAdmin ? [["admin", "Administrador", ShieldCheck] as const] : []),
+                      ["admin", "Administrador", ShieldCheck],
                     ] as const
                   ).map(([r, lbl, Icon]) => (
                     <button type="button" key={r} onClick={() => setRol(r as Rol)}
