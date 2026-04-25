@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
 import { PendingApproval } from "./PendingApproval";
 
-interface Stat { label: string; value: string | number; accent?: boolean; }
+interface Stat { label: string; value: string | number; accent?: boolean; to?: string; }
 
 export default function Dashboard() {
   const { role, profile, status, egresadoId, empresaId } = useAuth();
