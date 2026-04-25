@@ -33,10 +33,10 @@ export default function Dashboard() {
           supabase.from("postulaciones").select("id, vacantes!inner(empresa_id)", { count: "exact", head: true }).eq("vacantes.empresa_id", empresaId).eq("estado", "contratado"),
         ]);
         setStats([
-          { label: "Vacantes activas", value: vac.count ?? 0, accent: true, to: "/app/empresa/vacantes" },
-          { label: "Total postulantes", value: postul.count ?? 0, to: "/app/empresa/postulantes" },
-          { label: "En proceso", value: proc.count ?? 0, to: "/app/empresa/postulantes" },
-          { label: "Contratados", value: contr.count ?? 0, accent: true, to: "/app/empresa/postulantes" },
+          { label: "Vacantes activas", value: vac.count ?? 0, accent: true, to: "/app/mis-vacantes" },
+          { label: "Total postulantes", value: postul.count ?? 0, to: "/app/postulantes" },
+          { label: "En proceso", value: proc.count ?? 0, to: "/app/postulantes" },
+          { label: "Contratados", value: contr.count ?? 0, accent: true, to: "/app/postulantes" },
         ]);
       } else if (role === "admin") {
         const [eg, em, vac, post] = await Promise.all([
