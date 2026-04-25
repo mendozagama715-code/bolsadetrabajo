@@ -35,7 +35,7 @@ export default function Auth() {
   const canCreateAdmin = currentRole === "admin" || currentRole === "super_admin";
 
   const [li, setLi] = useState({ email: "", password: "" });
-  const [su, setSu] = useState({ nombre: "", email: "", password: "", confirm: "", rfc: "" });
+  const [su, setSu] = useState({ nombre: "", email: "", password: "", confirm: "", rfc: "", area: "", access_code: "" });
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
