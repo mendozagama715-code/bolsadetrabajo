@@ -276,8 +276,8 @@ export default function Auth() {
                   </div>
                 )}
                 {rol === "admin" && (
-                  <div className="text-[11px] bg-secondary border-l-2 border-primary text-foreground/80 rounded-r p-2.5">
-                    Estás creando una cuenta administrativa. La cuenta queda activa de inmediato.
+                  <div className="text-[11px] bg-warning/15 border-l-2 border-warning text-warning-foreground rounded-r p-2.5">
+                    El registro de administrador requiere autorización institucional. Necesitas el código de acceso proporcionado por la coordinación.
                   </div>
                 )}
                 <Button type="submit" disabled={loading} className="w-full">
