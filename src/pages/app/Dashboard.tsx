@@ -19,10 +19,10 @@ export default function Dashboard() {
           egresadoId ? supabase.from("postulaciones").select("id", { count: "exact", head: true }).eq("egresado_id", egresadoId).in("estado", ["en_revision","entrevista"]) : Promise.resolve({ count: 0 } as any),
         ]);
         setStats([
-          { label: "Vacantes disponibles", value: vac.count ?? 0, accent: true },
-          { label: "Mis postulaciones", value: post.count ?? 0 },
-          { label: "En proceso", value: proc.count ?? 0 },
-          { label: "Estado de cuenta", value: status?.estado === "aprobado" ? "Activa" : "Pendiente", accent: true },
+          { label: "Vacantes disponibles", value: vac.count ?? 0, accent: true, to: "/app/vacantes" },
+          { label: "Mis postulaciones", value: post.count ?? 0, to: "/app/postulaciones" },
+          { label: "En proceso", value: proc.count ?? 0, to: "/app/postulaciones" },
+          { label: "Estado de cuenta", value: status?.estado === "aprobado" ? "Activa" : "Pendiente", accent: true, to: "/app/perfil" },
         ]);
       } else if (role === "empresa") {
         if (!empresaId) return;
@@ -33,10 +33,10 @@ export default function Dashboard() {
           supabase.from("postulaciones").select("id, vacantes!inner(empresa_id)", { count: "exact", head: true }).eq("vacantes.empresa_id", empresaId).eq("estado", "contratado"),
         ]);
         setStats([
-          { label: "Vacantes activas", value: vac.count ?? 0, accent: true },
-          { label: "Total postulantes", value: postul.count ?? 0 },
-          { label: "En proceso", value: proc.count ?? 0 },
-          { label: "Contratados", value: contr.count ?? 0, accent: true },
+          { label: "Vacantes activas", value: vac.count ?? 0, accent: true, to: "/app/empresa/vacantes" },
+          { label: "Total postulantes", value: postul.count ?? 0, to: "/app/empresa/postulantes" },
+          { label: "En proceso", value: proc.count ?? 0, to: "/app/empresa/postulantes" },
+          { label: "Contratados", value: contr.count ?? 0, accent: true, to: "/app/empresa/postulantes" },
         ]);
       } else if (role === "admin") {
         const [eg, em, vac, post] = await Promise.all([
@@ -46,10 +46,10 @@ export default function Dashboard() {
           supabase.from("postulaciones").select("id", { count: "exact", head: true }),
         ]);
         setStats([
-          { label: "Egresados registrados", value: eg.count ?? 0, accent: true },
-          { label: "Empresas verificadas", value: em.count ?? 0 },
-          { label: "Vacantes activas", value: vac.count ?? 0, accent: true },
-          { label: "Postulaciones totales", value: post.count ?? 0 },
+          { label: "Egresados registrados", value: eg.count ?? 0, accent: true, to: "/app/admin/usuarios" },
+          { label: "Empresas verificadas", value: em.count ?? 0, to: "/app/admin/empresas" },
+          { label: "Vacantes activas", value: vac.count ?? 0, accent: true, to: "/app/admin/vacantes" },
+          { label: "Postulaciones totales", value: post.count ?? 0, to: "/app/admin/reportes" },
         ]);
       }
     };
