@@ -16,7 +16,7 @@ export default function Dashboard() {
         const [vac, post, proc] = await Promise.all([
           supabase.from("vacantes").select("id", { count: "exact", head: true }).eq("estado", "activa"),
           egresadoId ? supabase.from("postulaciones").select("id", { count: "exact", head: true }).eq("egresado_id", egresadoId) : Promise.resolve({ count: 0 } as any),
-          egresadoId ? supabase.from("postulaciones").select("id", { count: "exact", head: true }).eq("egresado_id", egresadoId).in("estado", ["en_revision","entrevista"]) : Promise.resolve({ count: 0 } as any),
+          egresadoId ? supabase.from("postulaciones").select("id", { count: "exact", head: true }).eq("egresado_id", egresadoId).in("estado", ["en_revision","proceso"]) : Promise.resolve({ count: 0 } as any),
         ]);
         setStats([
           { label: "Vacantes disponibles", value: vac.count ?? 0, accent: true, to: "/app/vacantes" },
@@ -29,7 +29,7 @@ export default function Dashboard() {
         const [vac, postul, proc, contr] = await Promise.all([
           supabase.from("vacantes").select("id", { count: "exact", head: true }).eq("empresa_id", empresaId).eq("estado", "activa"),
           supabase.from("postulaciones").select("id, vacantes!inner(empresa_id)", { count: "exact", head: true }).eq("vacantes.empresa_id", empresaId),
-          supabase.from("postulaciones").select("id, vacantes!inner(empresa_id)", { count: "exact", head: true }).eq("vacantes.empresa_id", empresaId).in("estado", ["en_revision","entrevista"]),
+          supabase.from("postulaciones").select("id, vacantes!inner(empresa_id)", { count: "exact", head: true }).eq("vacantes.empresa_id", empresaId).in("estado", ["en_revision","proceso"]),
           supabase.from("postulaciones").select("id, vacantes!inner(empresa_id)", { count: "exact", head: true }).eq("vacantes.empresa_id", empresaId).eq("estado", "contratado"),
         ]);
         setStats([
