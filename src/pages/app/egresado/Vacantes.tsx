@@ -145,16 +145,16 @@ export default function Vacantes() {
       )}
 
       {selected && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setSelected(null)}>
-          <div className="bg-card rounded-xl max-w-2xl w-full max-h-[85vh] overflow-y-auto shadow-md" onClick={(e) => e.stopPropagation()}>
-            <div className="p-6 border-b border-border flex items-start justify-between">
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-start sm:items-center justify-center p-2 sm:p-4 overflow-y-auto" onClick={() => setSelected(null)}>
+          <div className="bg-card rounded-xl max-w-2xl w-full my-4 max-h-[calc(100vh-2rem)] flex flex-col shadow-md" onClick={(e) => e.stopPropagation()}>
+            <div className="p-6 border-b border-border flex items-start justify-between shrink-0">
               <div>
                 <h2 className="font-display text-xl font-semibold">{selected.puesto}</h2>
                 <p className="text-sm text-muted-foreground mt-0.5">{selected.empresas?.razon_social}</p>
               </div>
               <button onClick={() => setSelected(null)} className="text-muted-foreground hover:text-foreground"><X size={20} /></button>
             </div>
-            <div className="p-6 space-y-4 text-sm">
+            <div className="p-6 space-y-4 text-sm overflow-y-auto flex-1">
               <div className="flex flex-wrap gap-2 text-xs">
                 {selected.ubicacion && <span className="badge-pill bg-secondary text-secondary-foreground">{selected.ubicacion}</span>}
                 <span className="badge-pill bg-secondary text-secondary-foreground">{TIPOS[selected.tipo_contrato]}</span>
@@ -184,7 +184,7 @@ export default function Vacantes() {
                 </div>
               )}
             </div>
-            <div className="p-4 border-t border-border flex justify-end gap-2">
+            <div className="p-4 border-t border-border flex justify-end gap-2 shrink-0">
               <button onClick={() => setSelected(null)} className="px-4 h-10 rounded-lg border border-border text-sm font-display hover:bg-secondary">Cerrar</button>
               {misPostuladas.has(selected.id) ? (
                 <span className="px-4 h-10 inline-flex items-center rounded-lg bg-success/15 text-success text-sm font-display">Ya postulaste</span>
