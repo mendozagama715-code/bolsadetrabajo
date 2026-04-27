@@ -59,23 +59,41 @@ export default function Postulantes() {
     if (ids.length === 0) { setItems([]); setLoading(false); return; }
 
     let q = supabase.from("postulaciones")
-      .select("*, vacantes(puesto), egresados(id,user_id,carrera,ubicacion,experiencia,habilidades,cv_url)")
+      .select("*")
       .in("vacante_id", ids)
       .order("created_at", { ascending: false });
     if (vac) q = q.eq("vacante_id", vac);
     if (estado) q = q.eq("estado", estado as any);
 
     const { data } = await q;
-    // get profile names
-    const userIds = Array.from(new Set((data ?? []).map((p: any) => p.egresados?.user_id).filter(Boolean)));
+    const rows = data ?? [];
+
+    // Vacantes map
+    const vacMap: Record<string, { puesto: string }> = {};
+    (vacs ?? []).forEach((v: any) => { vacMap[v.id] = { puesto: v.puesto }; });
+
+    // Egresados
+    const egIds = Array.from(new Set(rows.map((r: any) => r.egresado_id)));
+    const egMap: Record<string, any> = {};
+    if (egIds.length) {
+      const { data: egs } = await supabase
+        .from("egresados")
+        .select("id,user_id,carrera,ubicacion,experiencia,habilidades,cv_url")
+        .in("id", egIds);
+      (egs ?? []).forEach((e) => { egMap[e.id] = e; });
+    }
+
+    // Profiles
+    const userIds = Array.from(new Set(Object.values(egMap).map((e: any) => e.user_id).filter(Boolean)));
     let names: Record<string, string> = {};
     if (userIds.length) {
       const { data: profs } = await supabase.from("profiles").select("user_id,nombre").in("user_id", userIds);
       (profs ?? []).forEach((p) => { names[p.user_id] = p.nombre; });
     }
-    const enriched = (data ?? []).map((p: any) => ({
+    const enriched = rows.map((p: any) => ({
       ...p,
-      egresados: p.egresados ? { ...p.egresados, profiles: { nombre: names[p.egresados.user_id] ?? "Egresado" } } : null,
+      vacantes: vacMap[p.vacante_id] ?? null,
+      egresados: egMap[p.egresado_id] ? { ...egMap[p.egresado_id], profiles: { nombre: names[egMap[p.egresado_id].user_id] ?? "Egresado" } } : null,
     }));
     setItems(enriched);
     setLoading(false);
