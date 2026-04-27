@@ -164,7 +164,7 @@ export default function Postulantes() {
         </select>
         <select value={estado} onChange={(e) => setEstado(e.target.value)} className="h-10 px-3 bg-background border border-border rounded-lg text-sm">
           <option value="">Todos los estados</option>
-          {ESTADOS.map((e) => <option key={e} value={e}>{e}</option>)}
+          {ESTADOS.map((e) => <option key={e} value={e}>{ESTADO_LABEL[e] ?? e}</option>)}
         </select>
       </div>
 
