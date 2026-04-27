@@ -154,7 +154,7 @@ export default function Vacantes() {
               </div>
               <button onClick={() => setSelected(null)} className="text-muted-foreground hover:text-foreground"><X size={20} /></button>
             </div>
-            <div className="p-6 space-y-4 text-sm">
+            <div className="p-6 space-y-4 text-sm overflow-y-auto flex-1">
               <div className="flex flex-wrap gap-2 text-xs">
                 {selected.ubicacion && <span className="badge-pill bg-secondary text-secondary-foreground">{selected.ubicacion}</span>}
                 <span className="badge-pill bg-secondary text-secondary-foreground">{TIPOS[selected.tipo_contrato]}</span>
@@ -184,7 +184,7 @@ export default function Vacantes() {
                 </div>
               )}
             </div>
-            <div className="p-4 border-t border-border flex justify-end gap-2">
+            <div className="p-4 border-t border-border flex justify-end gap-2 shrink-0">
               <button onClick={() => setSelected(null)} className="px-4 h-10 rounded-lg border border-border text-sm font-display hover:bg-secondary">Cerrar</button>
               {misPostuladas.has(selected.id) ? (
                 <span className="px-4 h-10 inline-flex items-center rounded-lg bg-success/15 text-success text-sm font-display">Ya postulaste</span>
