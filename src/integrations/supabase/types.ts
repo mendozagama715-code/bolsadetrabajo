@@ -385,7 +385,7 @@ export type Database = {
       estado_postulacion:
         | "pendiente"
         | "en_revision"
-        | "entrevista"
+        | "proceso"
         | "contratado"
         | "rechazado"
       estado_vacante: "activa" | "cerrada"
@@ -528,7 +528,7 @@ export const Constants = {
       estado_postulacion: [
         "pendiente",
         "en_revision",
-        "entrevista",
+        "proceso",
         "contratado",
         "rechazado",
       ],
