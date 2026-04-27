@@ -43,11 +43,21 @@ export default function Vacantes() {
     setLoading(true);
     const { data, error } = await supabase
       .from("vacantes")
-      .select("*, empresas(razon_social, logo_url)")
+      .select("*")
       .eq("estado", "activa")
       .order("created_at", { ascending: false });
     if (error) toast.error("Error cargando vacantes");
-    setVacantes((data as Vacante[]) ?? []);
+    const rows = (data as any[]) ?? [];
+    const empIds = Array.from(new Set(rows.map((v) => v.empresa_id)));
+    let empMap: Record<string, { razon_social: string; logo_url: string | null }> = {};
+    if (empIds.length) {
+      const { data: emps } = await supabase
+        .from("empresas")
+        .select("id, razon_social, logo_url")
+        .in("id", empIds);
+      (emps ?? []).forEach((e) => { empMap[e.id] = { razon_social: e.razon_social, logo_url: e.logo_url }; });
+    }
+    setVacantes(rows.map((v) => ({ ...v, empresas: empMap[v.empresa_id] ?? null })));
     if (egresadoId) {
       const { data: posts } = await supabase
         .from("postulaciones")
