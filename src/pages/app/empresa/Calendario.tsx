@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { PageHeader } from "@/components/PageHeader";
@@ -16,8 +17,11 @@ interface Evento {
 
 export default function Calendario() {
   const { empresaId } = useAuth();
+  const [params, setParams] = useSearchParams();
+  const navigate = useNavigate();
   const [items, setItems] = useState<Evento[]>([]);
   const [open, setOpen] = useState(false);
+  const [postulacionId, setPostulacionId] = useState<string | null>(null);
   const [f, setF] = useState({ titulo: "", descripcion: "", fecha: "", hora: "", tipo: "entrevista" });
 
   const load = async () => {
@@ -26,6 +30,25 @@ export default function Calendario() {
     setItems((data as Evento[]) ?? []);
   };
   useEffect(() => { load(); }, [empresaId]);
+
+  // Prellenar desde query params (al venir desde Postulantes)
+  useEffect(() => {
+    if (params.get("nuevo") === "1") {
+      setF({
+        titulo: params.get("titulo") ?? "",
+        descripcion: "",
+        fecha: "",
+        hora: "",
+        tipo: params.get("tipo") ?? "entrevista",
+      });
+      setPostulacionId(params.get("postulacion"));
+      setOpen(true);
+      // Limpiar la URL para no reabrir si recarga
+      const next = new URLSearchParams(params);
+      ["nuevo","titulo","tipo","postulacion"].forEach((k) => next.delete(k));
+      setParams(next, { replace: true });
+    }
+  }, [params, setParams]);
 
   const guardar = async () => {
     if (!empresaId || !f.titulo || !f.fecha) return toast.error("Título y fecha obligatorios");
@@ -36,10 +59,13 @@ export default function Calendario() {
       fecha: f.fecha,
       hora: f.hora || null,
       tipo: f.tipo as any,
+      postulacion_id: postulacionId,
     });
     if (error) return toast.error("Error");
     toast.success("Evento agregado");
-    setOpen(false); setF({ titulo: "", descripcion: "", fecha: "", hora: "", tipo: "entrevista" });
+    setOpen(false);
+    setPostulacionId(null);
+    setF({ titulo: "", descripcion: "", fecha: "", hora: "", tipo: "entrevista" });
     load();
   };
 

@@ -10,7 +10,7 @@ const MAP: Record<string, { label: string; cls: string }> = {
   activa: { label: "Activa", cls: "bg-success/15 text-success border border-success/30" },
   cerrada: { label: "Cerrada", cls: "bg-muted text-muted-foreground border border-border" },
   en_revision: { label: "En revisión", cls: "bg-info/15 text-info border border-info/30" },
-  entrevista: { label: "Entrevista", cls: "bg-primary/10 text-primary border border-primary/30" },
+  proceso: { label: "En proceso", cls: "bg-primary/10 text-primary border border-primary/30" },
   contratado: { label: "Contratado", cls: "bg-success/15 text-success border border-success/30" },
 };
 

@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { PageHeader } from "@/components/PageHeader";
 import { StatusBadge } from "@/components/StatusBadge";
 import { toast } from "sonner";
+import { crearNotificacion } from "@/lib/notifications";
 import { Users, FileText, X } from "lucide-react";
 
 interface Postulante {
@@ -28,7 +29,14 @@ interface Postulante {
   } | null;
 }
 
-const ESTADOS = ["pendiente", "en_revision", "entrevista", "contratado", "rechazado"];
+const ESTADOS = ["pendiente", "en_revision", "proceso", "contratado", "rechazado"];
+const ESTADO_LABEL: Record<string, string> = {
+  pendiente: "Pendiente",
+  en_revision: "En revisión",
+  proceso: "En proceso",
+  contratado: "Contratado",
+  rechazado: "Rechazado",
+};
 
 export default function Postulantes() {
   const { empresaId } = useAuth();
@@ -52,23 +60,41 @@ export default function Postulantes() {
     if (ids.length === 0) { setItems([]); setLoading(false); return; }
 
     let q = supabase.from("postulaciones")
-      .select("*, vacantes(puesto), egresados(id,user_id,carrera,ubicacion,experiencia,habilidades,cv_url)")
+      .select("*")
       .in("vacante_id", ids)
       .order("created_at", { ascending: false });
     if (vac) q = q.eq("vacante_id", vac);
     if (estado) q = q.eq("estado", estado as any);
 
     const { data } = await q;
-    // get profile names
-    const userIds = Array.from(new Set((data ?? []).map((p: any) => p.egresados?.user_id).filter(Boolean)));
+    const rows = data ?? [];
+
+    // Vacantes map
+    const vacMap: Record<string, { puesto: string }> = {};
+    (vacs ?? []).forEach((v: any) => { vacMap[v.id] = { puesto: v.puesto }; });
+
+    // Egresados
+    const egIds = Array.from(new Set(rows.map((r: any) => r.egresado_id)));
+    const egMap: Record<string, any> = {};
+    if (egIds.length) {
+      const { data: egs } = await supabase
+        .from("egresados")
+        .select("id,user_id,carrera,ubicacion,experiencia,habilidades,cv_url")
+        .in("id", egIds);
+      (egs ?? []).forEach((e) => { egMap[e.id] = e; });
+    }
+
+    // Profiles
+    const userIds = Array.from(new Set(Object.values(egMap).map((e: any) => e.user_id).filter(Boolean)));
     let names: Record<string, string> = {};
     if (userIds.length) {
       const { data: profs } = await supabase.from("profiles").select("user_id,nombre").in("user_id", userIds);
       (profs ?? []).forEach((p) => { names[p.user_id] = p.nombre; });
     }
-    const enriched = (data ?? []).map((p: any) => ({
+    const enriched = rows.map((p: any) => ({
       ...p,
-      egresados: p.egresados ? { ...p.egresados, profiles: { nombre: names[p.egresados.user_id] ?? "Egresado" } } : null,
+      vacantes: vacMap[p.vacante_id] ?? null,
+      egresados: egMap[p.egresado_id] ? { ...egMap[p.egresado_id], profiles: { nombre: names[egMap[p.egresado_id].user_id] ?? "Egresado" } } : null,
     }));
     setItems(enriched);
     setLoading(false);
@@ -86,13 +112,45 @@ export default function Postulantes() {
     }
   };
 
+  const navigate = useNavigate();
+
   const cambiarEstado = async (nuevo: string) => {
     if (!selected) return;
     const { error } = await supabase.from("postulaciones").update({ estado: nuevo as any, notas_empresa: notas || null }).eq("id", selected.id);
     if (error) return toast.error("Error al actualizar");
+
+    // Notificar al egresado
+    const userId = selected.egresados?.user_id;
+    if (userId) {
+      const labels: Record<string, { titulo: string; mensaje: string; tipo: "info" | "exito" | "advertencia" | "error" }> = {
+        en_revision: { titulo: "Tu postulación está en revisión", mensaje: `La empresa está revisando tu postulación a "${selected.vacantes?.puesto ?? ""}".`, tipo: "info" },
+        proceso: { titulo: "¡Avanzaste de etapa!", mensaje: `Tu postulación a "${selected.vacantes?.puesto ?? ""}" está en proceso. Pronto serás contactado.`, tipo: "exito" },
+        contratado: { titulo: "¡Felicidades, fuiste contratado!", mensaje: `Has sido contratado para "${selected.vacantes?.puesto ?? ""}".`, tipo: "exito" },
+        rechazado: { titulo: "Postulación no seleccionada", mensaje: `Tu postulación a "${selected.vacantes?.puesto ?? ""}" no fue seleccionada en esta ocasión.`, tipo: "advertencia" },
+      };
+      const n = labels[nuevo];
+      if (n) await crearNotificacion({ user_id: userId, titulo: n.titulo, mensaje: n.mensaje, tipo: n.tipo, enlace: "/app/postulaciones" });
+    }
+
     toast.success("Postulación actualizada");
+    const sel = selected;
     setSelected(null);
     load();
+
+    // Si pasa a "proceso" o "contratado", llevar al calendario para agendar
+    if (nuevo === "proceso" || nuevo === "contratado") {
+      const tipoEvento = nuevo === "contratado" ? "contratacion" : "entrevista";
+      const titulo = nuevo === "contratado"
+        ? `Contratación: ${sel.egresados?.profiles?.nombre ?? "Candidato"}`
+        : `Entrevista: ${sel.egresados?.profiles?.nombre ?? "Candidato"} — ${sel.vacantes?.puesto ?? ""}`;
+      const params = new URLSearchParams({
+        nuevo: "1",
+        titulo,
+        tipo: tipoEvento,
+        postulacion: sel.id,
+      });
+      navigate(`/app/calendario?${params.toString()}`);
+    }
   };
 
   return (
@@ -106,7 +164,7 @@ export default function Postulantes() {
         </select>
         <select value={estado} onChange={(e) => setEstado(e.target.value)} className="h-10 px-3 bg-background border border-border rounded-lg text-sm">
           <option value="">Todos los estados</option>
-          {ESTADOS.map((e) => <option key={e} value={e}>{e}</option>)}
+          {ESTADOS.map((e) => <option key={e} value={e}>{ESTADO_LABEL[e] ?? e}</option>)}
         </select>
       </div>
 
@@ -176,7 +234,7 @@ export default function Postulantes() {
             <div className="p-4 border-t border-border flex flex-wrap justify-end gap-2">
               {ESTADOS.map((e) => (
                 <button key={e} onClick={() => cambiarEstado(e)} className={`px-3 h-9 rounded-lg text-xs font-display font-medium border ${selected.estado === e ? "bg-primary text-primary-foreground border-primary" : "border-border hover:bg-secondary"}`}>
-                  {e.replace("_", " ")}
+                  {ESTADO_LABEL[e] ?? e}
                 </button>
               ))}
             </div>
