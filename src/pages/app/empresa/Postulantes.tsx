@@ -129,7 +129,7 @@ export default function Postulantes() {
         rechazado: { titulo: "Postulación no seleccionada", mensaje: `Tu postulación a "${selected.vacantes?.puesto ?? ""}" no fue seleccionada en esta ocasión.`, tipo: "advertencia" },
       };
       const n = labels[nuevo];
-      if (n) await crearNotificacion(userId, n.titulo, n.mensaje, n.tipo, "/app/postulaciones");
+      if (n) await crearNotificacion({ user_id: userId, titulo: n.titulo, mensaje: n.mensaje, tipo: n.tipo, enlace: "/app/postulaciones" });
     }
 
     toast.success("Postulación actualizada");
