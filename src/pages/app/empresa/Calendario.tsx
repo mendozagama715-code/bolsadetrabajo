@@ -59,10 +59,13 @@ export default function Calendario() {
       fecha: f.fecha,
       hora: f.hora || null,
       tipo: f.tipo as any,
+      postulacion_id: postulacionId,
     });
     if (error) return toast.error("Error");
     toast.success("Evento agregado");
-    setOpen(false); setF({ titulo: "", descripcion: "", fecha: "", hora: "", tipo: "entrevista" });
+    setOpen(false);
+    setPostulacionId(null);
+    setF({ titulo: "", descripcion: "", fecha: "", hora: "", tipo: "entrevista" });
     load();
   };
 
