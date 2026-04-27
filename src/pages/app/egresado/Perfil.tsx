@@ -5,6 +5,15 @@ import { PageHeader } from "@/components/PageHeader";
 import { toast } from "sonner";
 import { Upload, FileText, Trash2 } from "lucide-react";
 
+const CARRERAS = [
+  "Ingeniería en Desarrollo Sustentable con Orientación en Veterinaria y Zootecnia",
+  "Ingeniería en Desarrollo Sustentable con Orientación en Eco-Biología",
+  "Ingeniería en Tecnologías de la Información y Comunicaciones",
+  "Ingeniería Agroindustrial",
+  "Ingeniería en Sistemas Computacionales",
+  "Licenciatura en Administración y Negocios",
+];
+
 export default function PerfilEgresado() {
   const { user, egresadoId, profile, refresh } = useAuth();
   const [loading, setLoading] = useState(true);
@@ -97,7 +106,12 @@ export default function PerfilEgresado() {
           <Field label="Nombre completo"><input value={nombre} onChange={(e) => setNombre(e.target.value)} className={inputCls} /></Field>
           <Field label="Teléfono"><input value={telefono} onChange={(e) => setTelefono(e.target.value)} className={inputCls} /></Field>
           <Field label="Matrícula"><input value={matricula} onChange={(e) => setMatricula(e.target.value)} className={inputCls} /></Field>
-          <Field label="Carrera"><input value={carrera} onChange={(e) => setCarrera(e.target.value)} className={inputCls} /></Field>
+          <Field label="Carrera">
+            <select value={carrera} onChange={(e) => setCarrera(e.target.value)} className={inputCls}>
+              <option value="">Selecciona tu carrera</option>
+              {CARRERAS.map((c) => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </Field>
           <Field label="Año de egreso"><input type="number" value={anioEgreso} onChange={(e) => setAnioEgreso(e.target.value)} className={inputCls} /></Field>
           <Field label="Ubicación"><input value={ubicacion} onChange={(e) => setUbicacion(e.target.value)} className={inputCls} /></Field>
         </div>

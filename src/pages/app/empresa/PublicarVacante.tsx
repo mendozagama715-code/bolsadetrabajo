@@ -7,6 +7,15 @@ import { toast } from "sonner";
 
 const inputCls = "w-full px-3 h-10 bg-background border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30";
 
+const CARRERAS = [
+  "Ingeniería en Desarrollo Sustentable con Orientación en Veterinaria y Zootecnia",
+  "Ingeniería en Desarrollo Sustentable con Orientación en Eco-Biología",
+  "Ingeniería en Tecnologías de la Información y Comunicaciones",
+  "Ingeniería Agroindustrial",
+  "Ingeniería en Sistemas Computacionales",
+  "Licenciatura en Administración y Negocios",
+];
+
 export default function PublicarVacante() {
   const { empresaId } = useAuth();
   const navigate = useNavigate();
@@ -49,7 +58,12 @@ export default function PublicarVacante() {
         <div className="grid md:grid-cols-2 gap-4">
           <Field label="Puesto *"><input required value={f.puesto} onChange={(e) => set("puesto", e.target.value)} className={inputCls} /></Field>
           <Field label="Área"><input value={f.area} onChange={(e) => set("area", e.target.value)} className={inputCls} /></Field>
-          <Field label="Carrera solicitada"><input value={f.carrera_solicitada} onChange={(e) => set("carrera_solicitada", e.target.value)} className={inputCls} /></Field>
+          <Field label="Carrera solicitada">
+            <select value={f.carrera_solicitada} onChange={(e) => set("carrera_solicitada", e.target.value)} className={inputCls}>
+              <option value="">Cualquier carrera</option>
+              {CARRERAS.map((c) => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </Field>
           <Field label="Ubicación"><input value={f.ubicacion} onChange={(e) => set("ubicacion", e.target.value)} className={inputCls} /></Field>
           <Field label="Tipo de contrato">
             <select value={f.tipo_contrato} onChange={(e) => set("tipo_contrato", e.target.value)} className={inputCls}>
