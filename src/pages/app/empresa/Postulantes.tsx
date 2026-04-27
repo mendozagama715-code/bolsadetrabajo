@@ -28,7 +28,14 @@ interface Postulante {
   } | null;
 }
 
-const ESTADOS = ["pendiente", "en_revision", "entrevista", "contratado", "rechazado"];
+const ESTADOS = ["pendiente", "en_revision", "proceso", "contratado", "rechazado"];
+const ESTADO_LABEL: Record<string, string> = {
+  pendiente: "Pendiente",
+  en_revision: "En revisión",
+  proceso: "En proceso",
+  contratado: "Contratado",
+  rechazado: "Rechazado",
+};
 
 export default function Postulantes() {
   const { empresaId } = useAuth();
