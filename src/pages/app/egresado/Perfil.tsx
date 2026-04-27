@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { PageHeader } from "@/components/PageHeader";
@@ -28,10 +28,15 @@ export default function PerfilEgresado() {
   const [habilidades, setHabilidades] = useState("");
   const [cvUrl, setCvUrl] = useState<string | null>(null);
   const [cvPath, setCvPath] = useState<string | null>(null);
+  const loadedFor = useRef<string | null>(null);
 
   useEffect(() => {
     (async () => {
       if (!user || !egresadoId) return;
+      // Evita recargar (y borrar lo que el usuario está escribiendo) cuando
+      // Supabase dispara TOKEN_REFRESHED al volver a la pestaña del navegador.
+      if (loadedFor.current === egresadoId) return;
+      loadedFor.current = egresadoId;
       const [pRes, eRes] = await Promise.all([
         supabase.from("profiles").select("nombre,telefono").eq("user_id", user.id).maybeSingle(),
         supabase.from("egresados").select("*").eq("id", egresadoId).maybeSingle(),

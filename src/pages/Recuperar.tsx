@@ -65,7 +65,7 @@ export default function Recuperar() {
                     <Label htmlFor="email">Correo electrónico</Label>
                     <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="ejemplo@correo.com" />
                   </div>
-                  <div className="text-[12px] bg-info/10 border-l-2 border-info text-info-foreground/90 rounded-r p-2.5">
+                  <div className="text-[12px] bg-info/10 border-l-2 border-info text-foreground rounded-r p-2.5">
                     El enlace de recuperación es válido por 30 minutos.
                   </div>
                   <Button type="submit" disabled={loading} className="w-full">
