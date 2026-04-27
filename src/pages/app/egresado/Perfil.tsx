@@ -5,6 +5,15 @@ import { PageHeader } from "@/components/PageHeader";
 import { toast } from "sonner";
 import { Upload, FileText, Trash2 } from "lucide-react";
 
+const CARRERAS = [
+  "Ingeniería en Desarrollo Sustentable con Orientación en Veterinaria y Zootecnia",
+  "Ingeniería en Desarrollo Sustentable con Orientación en Eco-Biología",
+  "Ingeniería en Tecnologías de la Información y Comunicaciones",
+  "Ingeniería Agroindustrial",
+  "Ingeniería en Sistemas Computacionales",
+  "Licenciatura en Administración y Negocios",
+];
+
 export default function PerfilEgresado() {
   const { user, egresadoId, profile, refresh } = useAuth();
   const [loading, setLoading] = useState(true);
