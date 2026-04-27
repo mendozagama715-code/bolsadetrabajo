@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { PageHeader } from "@/components/PageHeader";
 import { StatusBadge } from "@/components/StatusBadge";
 import { toast } from "sonner";
+import { crearNotificacion } from "@/lib/notifications";
 import { Users, FileText, X } from "lucide-react";
 
 interface Postulante {
@@ -111,13 +112,45 @@ export default function Postulantes() {
     }
   };
 
+  const navigate = useNavigate();
+
   const cambiarEstado = async (nuevo: string) => {
     if (!selected) return;
     const { error } = await supabase.from("postulaciones").update({ estado: nuevo as any, notas_empresa: notas || null }).eq("id", selected.id);
     if (error) return toast.error("Error al actualizar");
+
+    // Notificar al egresado
+    const userId = selected.egresados?.user_id;
+    if (userId) {
+      const labels: Record<string, { titulo: string; mensaje: string; tipo: "info" | "exito" | "advertencia" | "error" }> = {
+        en_revision: { titulo: "Tu postulación está en revisión", mensaje: `La empresa está revisando tu postulación a "${selected.vacantes?.puesto ?? ""}".`, tipo: "info" },
+        proceso: { titulo: "¡Avanzaste de etapa!", mensaje: `Tu postulación a "${selected.vacantes?.puesto ?? ""}" está en proceso. Pronto serás contactado.`, tipo: "exito" },
+        contratado: { titulo: "¡Felicidades, fuiste contratado!", mensaje: `Has sido contratado para "${selected.vacantes?.puesto ?? ""}".`, tipo: "exito" },
+        rechazado: { titulo: "Postulación no seleccionada", mensaje: `Tu postulación a "${selected.vacantes?.puesto ?? ""}" no fue seleccionada en esta ocasión.`, tipo: "advertencia" },
+      };
+      const n = labels[nuevo];
+      if (n) await crearNotificacion(userId, n.titulo, n.mensaje, n.tipo, "/app/postulaciones");
+    }
+
     toast.success("Postulación actualizada");
+    const sel = selected;
     setSelected(null);
     load();
+
+    // Si pasa a "proceso" o "contratado", llevar al calendario para agendar
+    if (nuevo === "proceso" || nuevo === "contratado") {
+      const tipoEvento = nuevo === "contratado" ? "contratacion" : "entrevista";
+      const titulo = nuevo === "contratado"
+        ? `Contratación: ${sel.egresados?.profiles?.nombre ?? "Candidato"}`
+        : `Entrevista: ${sel.egresados?.profiles?.nombre ?? "Candidato"} — ${sel.vacantes?.puesto ?? ""}`;
+      const params = new URLSearchParams({
+        nuevo: "1",
+        titulo,
+        tipo: tipoEvento,
+        postulacion: sel.id,
+      });
+      navigate(`/app/calendario?${params.toString()}`);
+    }
   };
 
   return (
