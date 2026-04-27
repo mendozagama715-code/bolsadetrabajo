@@ -28,11 +28,43 @@ export default function Postulaciones() {
     setLoading(true);
     const { data, error } = await supabase
       .from("postulaciones")
-      .select("id, estado, mensaje, created_at, vacantes(puesto, ubicacion, empresas(razon_social))")
+      .select("id, estado, mensaje, created_at, vacante_id")
       .eq("egresado_id", egresadoId)
       .order("created_at", { ascending: false });
-    if (error) toast.error("Error cargando postulaciones");
-    setItems((data as any) ?? []);
+    if (error) {
+      toast.error("Error cargando postulaciones");
+      setLoading(false);
+      return;
+    }
+    const vacIds = Array.from(new Set((data ?? []).map((p) => p.vacante_id)));
+    let vacMap: Record<string, { puesto: string; ubicacion: string | null; empresa_id: string }> = {};
+    let empMap: Record<string, string> = {};
+    if (vacIds.length) {
+      const { data: vacs } = await supabase
+        .from("vacantes")
+        .select("id, puesto, ubicacion, empresa_id")
+        .in("id", vacIds);
+      (vacs ?? []).forEach((v) => { vacMap[v.id] = v as any; });
+      const empIds = Array.from(new Set((vacs ?? []).map((v) => v.empresa_id)));
+      if (empIds.length) {
+        const { data: emps } = await supabase
+          .from("empresas")
+          .select("id, razon_social")
+          .in("id", empIds);
+        (emps ?? []).forEach((e) => { empMap[e.id] = e.razon_social; });
+      }
+    }
+    const enriched: Postulacion[] = (data ?? []).map((p) => {
+      const v = vacMap[p.vacante_id];
+      return {
+        id: p.id,
+        estado: p.estado,
+        mensaje: p.mensaje,
+        created_at: p.created_at,
+        vacantes: v ? { puesto: v.puesto, ubicacion: v.ubicacion, empresas: { razon_social: empMap[v.empresa_id] ?? "—" } } : null,
+      };
+    });
+    setItems(enriched);
     setLoading(false);
   };
 
