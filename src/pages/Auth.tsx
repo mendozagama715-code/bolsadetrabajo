@@ -154,8 +154,8 @@ export default function Auth() {
         </aside>
 
         {/* Panel derecho - card */}
-        <section className="flex-1 flex items-center justify-center p-6 bg-background">
-          <div className="w-full max-w-sm bg-card border border-border rounded-xl p-7 shadow-card animate-fade-in">
+        <section className="flex-1 flex items-center justify-center p-3 sm:p-6 bg-background">
+          <div className="w-full max-w-sm bg-card border border-border rounded-xl p-4 sm:p-7 shadow-card animate-fade-in">
             <div className="flex border-b border-border mb-5 -mt-1">
               {(["login", "signup"] as Tab[]).map((t) => (
                 <button
