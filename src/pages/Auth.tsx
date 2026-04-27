@@ -118,6 +118,10 @@ export default function Auth() {
       });
     }
 
+    // Asegurar sesión activa (auto-confirm está habilitado)
+    if (!data.session) {
+      await supabase.auth.signInWithPassword({ email: r.data.email, password: r.data.password });
+    }
     setLoading(false);
     toast.success("Cuenta creada. Tu registro está pendiente de validación.");
     navigate("/app");
