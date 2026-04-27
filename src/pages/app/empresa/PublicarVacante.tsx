@@ -49,7 +49,12 @@ export default function PublicarVacante() {
         <div className="grid md:grid-cols-2 gap-4">
           <Field label="Puesto *"><input required value={f.puesto} onChange={(e) => set("puesto", e.target.value)} className={inputCls} /></Field>
           <Field label="Área"><input value={f.area} onChange={(e) => set("area", e.target.value)} className={inputCls} /></Field>
-          <Field label="Carrera solicitada"><input value={f.carrera_solicitada} onChange={(e) => set("carrera_solicitada", e.target.value)} className={inputCls} /></Field>
+          <Field label="Carrera solicitada">
+            <select value={f.carrera_solicitada} onChange={(e) => set("carrera_solicitada", e.target.value)} className={inputCls}>
+              <option value="">Cualquier carrera</option>
+              {CARRERAS.map((c) => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </Field>
           <Field label="Ubicación"><input value={f.ubicacion} onChange={(e) => set("ubicacion", e.target.value)} className={inputCls} /></Field>
           <Field label="Tipo de contrato">
             <select value={f.tipo_contrato} onChange={(e) => set("tipo_contrato", e.target.value)} className={inputCls}>
