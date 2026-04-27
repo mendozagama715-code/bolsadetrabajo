@@ -234,7 +234,7 @@ export default function Postulantes() {
             <div className="p-4 border-t border-border flex flex-wrap justify-end gap-2">
               {ESTADOS.map((e) => (
                 <button key={e} onClick={() => cambiarEstado(e)} className={`px-3 h-9 rounded-lg text-xs font-display font-medium border ${selected.estado === e ? "bg-primary text-primary-foreground border-primary" : "border-border hover:bg-secondary"}`}>
-                  {e.replace("_", " ")}
+                  {ESTADO_LABEL[e] ?? e}
                 </button>
               ))}
             </div>
