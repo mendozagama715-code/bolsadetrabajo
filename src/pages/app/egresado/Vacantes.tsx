@@ -122,16 +122,43 @@ export default function Vacantes() {
     <div>
       <PageHeader title="Vacantes disponibles" subtitle="Encuentra oportunidades laborales en la región" />
 
-      {!tienePerfil && !loading && (
+      {!tienePerfil && !loading ? (
         <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 mb-4 flex items-start gap-3">
           <Sparkles size={18} className="text-primary shrink-0 mt-0.5" />
-          <div className="text-sm">
+          <div className="text-sm flex-1">
             <p className="font-display font-semibold text-foreground">Activa las recomendaciones inteligentes</p>
             <p className="text-muted-foreground mt-0.5">
               Completa tu perfil (habilidades, experiencia y carrera) para que el sistema te recomiende las vacantes más afines a tu CV.
             </p>
+            <Link to="/app/perfil" className="inline-flex items-center gap-1.5 mt-2 text-xs font-display font-semibold text-primary hover:underline">
+              Ir a mi perfil →
+            </Link>
           </div>
         </div>
+      ) : !loading && (
+        <button
+          onClick={() => {
+            setAnalizando(true);
+            setShowMatcher(true);
+            setTimeout(() => setAnalizando(false), 900);
+          }}
+          className="w-full mb-4 group relative overflow-hidden rounded-xl p-5 text-left border border-primary/30 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent hover:border-primary/50 hover:shadow-md transition"
+        >
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-primary/15 flex items-center justify-center shrink-0">
+              <Wand2 size={22} className="text-primary" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-display font-semibold text-foreground">Encontrar puestos para mí</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Analiza tu CV con IA y muestra las {Math.min(5, vacantes.length)} vacantes más afines a tus habilidades.
+              </p>
+            </div>
+            <span className="hidden sm:inline-flex items-center gap-1 px-3 h-9 rounded-lg bg-primary text-primary-foreground text-xs font-display font-semibold group-hover:bg-primary/90">
+              <Sparkles size={12} /> Analizar
+            </span>
+          </div>
+        </button>
       )}
 
       <div className="bg-card border border-border rounded-xl p-4 mb-5 flex flex-wrap gap-3 items-center shadow-card">
