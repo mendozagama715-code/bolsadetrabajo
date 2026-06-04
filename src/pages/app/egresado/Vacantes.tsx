@@ -44,6 +44,8 @@ export default function Vacantes() {
   const [selected, setSelected] = useState<Vacante | null>(null);
   const [postulando, setPostulando] = useState(false);
   const [mensaje, setMensaje] = useState("");
+  const [showMatcher, setShowMatcher] = useState(false);
+  const [analizando, setAnalizando] = useState(false);
 
   const load = async () => {
     setLoading(true);
