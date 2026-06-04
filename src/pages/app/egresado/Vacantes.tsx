@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { PageHeader } from "@/components/PageHeader";
 import { StatusBadge } from "@/components/StatusBadge";
 import { toast } from "sonner";
-import { Search, MapPin, Briefcase, Building2, X } from "lucide-react";
+import { Search, MapPin, Briefcase, Building2, X, Sparkles } from "lucide-react";
+import { matchScore, matchLabel, type EgresadoPerfil } from "@/lib/matching";
 
 interface Vacante {
   id: string;
@@ -12,6 +13,7 @@ interface Vacante {
   descripcion: string;
   requisitos: string | null;
   area: string | null;
+  carrera_solicitada: string | null;
   ubicacion: string | null;
   tipo_contrato: string;
   salario_min: number | null;
@@ -19,6 +21,7 @@ interface Vacante {
   fecha_cierre: string | null;
   empresa_id: string;
   empresas?: { razon_social: string; logo_url: string | null } | null;
+  _score?: number;
 }
 
 const TIPOS: Record<string, string> = {
@@ -30,11 +33,13 @@ const TIPOS: Record<string, string> = {
 
 export default function Vacantes() {
   const { egresadoId } = useAuth();
+  const [perfil, setPerfil] = useState<EgresadoPerfil | null>(null);
   const [vacantes, setVacantes] = useState<Vacante[]>([]);
   const [misPostuladas, setMisPostuladas] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [tipo, setTipo] = useState<string>("");
+  const [orden, setOrden] = useState<"match" | "recientes">("match");
   const [selected, setSelected] = useState<Vacante | null>(null);
   const [postulando, setPostulando] = useState(false);
   const [mensaje, setMensaje] = useState("");
@@ -59,16 +64,24 @@ export default function Vacantes() {
     }
     setVacantes(rows.map((v) => ({ ...v, empresas: empMap[v.empresa_id] ?? null })));
     if (egresadoId) {
-      const { data: posts } = await supabase
-        .from("postulaciones")
-        .select("vacante_id")
-        .eq("egresado_id", egresadoId);
-      setMisPostuladas(new Set((posts ?? []).map((p) => p.vacante_id)));
+      const [postsRes, egRes] = await Promise.all([
+        supabase.from("postulaciones").select("vacante_id").eq("egresado_id", egresadoId),
+        supabase.from("egresados").select("habilidades,experiencia,carrera,ubicacion").eq("id", egresadoId).maybeSingle(),
+      ]);
+      setMisPostuladas(new Set((postsRes.data ?? []).map((p) => p.vacante_id)));
+      setPerfil(egRes.data ?? null);
     }
     setLoading(false);
   };
 
   useEffect(() => { load(); }, [egresadoId]);
+
+  const tienePerfil = !!(perfil && ((perfil.habilidades?.length ?? 0) > 0 || perfil.experiencia || perfil.carrera));
+
+  const vacantesConScore = useMemo(() => {
+    if (!tienePerfil) return vacantes;
+    return vacantes.map((v) => ({ ...v, _score: matchScore(perfil!, v) }));
+  }, [vacantes, perfil, tienePerfil]);
 
   const postular = async () => {
     if (!selected || !egresadoId) return;
@@ -89,16 +102,34 @@ export default function Vacantes() {
     setMensaje("");
   };
 
-  const filtered = vacantes.filter((v) => {
-    const s = search.toLowerCase();
-    const matchSearch = !s || v.puesto.toLowerCase().includes(s) || v.empresas?.razon_social?.toLowerCase().includes(s) || v.area?.toLowerCase().includes(s);
-    const matchTipo = !tipo || v.tipo_contrato === tipo;
-    return matchSearch && matchTipo;
-  });
+  const filtered = useMemo(() => {
+    let list = vacantesConScore.filter((v) => {
+      const s = search.toLowerCase();
+      const matchSearch = !s || v.puesto.toLowerCase().includes(s) || v.empresas?.razon_social?.toLowerCase().includes(s) || v.area?.toLowerCase().includes(s);
+      const matchTipo = !tipo || v.tipo_contrato === tipo;
+      return matchSearch && matchTipo;
+    });
+    if (orden === "match" && tienePerfil) {
+      list = [...list].sort((a, b) => (b._score ?? 0) - (a._score ?? 0));
+    }
+    return list;
+  }, [vacantesConScore, search, tipo, orden, tienePerfil]);
 
   return (
     <div>
       <PageHeader title="Vacantes disponibles" subtitle="Encuentra oportunidades laborales en la región" />
+
+      {!tienePerfil && !loading && (
+        <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 mb-4 flex items-start gap-3">
+          <Sparkles size={18} className="text-primary shrink-0 mt-0.5" />
+          <div className="text-sm">
+            <p className="font-display font-semibold text-foreground">Activa las recomendaciones inteligentes</p>
+            <p className="text-muted-foreground mt-0.5">
+              Completa tu perfil (habilidades, experiencia y carrera) para que el sistema te recomiende las vacantes más afines a tu CV.
+            </p>
+          </div>
+        </div>
+      )}
 
       <div className="bg-card border border-border rounded-xl p-4 mb-5 flex flex-wrap gap-3 items-center shadow-card">
         <div className="flex-1 min-w-[220px] relative">
@@ -114,6 +145,12 @@ export default function Vacantes() {
           <option value="">Todos los contratos</option>
           {Object.entries(TIPOS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
         </select>
+        {tienePerfil && (
+          <select value={orden} onChange={(e) => setOrden(e.target.value as any)} className="h-10 px-3 bg-background border border-border rounded-lg text-sm">
+            <option value="match">⭐ Recomendadas para ti</option>
+            <option value="recientes">Más recientes</option>
+          </select>
+        )}
       </div>
 
       {loading ? (
@@ -127,6 +164,9 @@ export default function Vacantes() {
         <div className="grid gap-3">
           {filtered.map((v) => {
             const yaPostulé = misPostuladas.has(v.id);
+            const score = v._score ?? 0;
+            const lbl = matchLabel(score);
+            const toneCls = lbl.tone === "high" ? "bg-success/15 text-success" : lbl.tone === "mid" ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground";
             return (
               <div key={v.id} className="bg-card border border-border rounded-xl p-5 shadow-card hover:shadow-md transition cursor-pointer" onClick={() => setSelected(v)}>
                 <div className="flex items-start gap-4">
@@ -139,7 +179,14 @@ export default function Vacantes() {
                         <h3 className="font-display font-semibold text-foreground">{v.puesto}</h3>
                         <p className="text-xs text-muted-foreground">{v.empresas?.razon_social}</p>
                       </div>
-                      {yaPostulé && <StatusBadge estado="aprobado" className="!text-[10px]" />}
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        {tienePerfil && (
+                          <span className={`inline-flex items-center gap-1 px-2 h-6 rounded-full text-[10px] font-display font-semibold ${toneCls}`} title={lbl.text}>
+                            <Sparkles size={10} /> {score}% match
+                          </span>
+                        )}
+                        {yaPostulé && <StatusBadge estado="aprobado" className="!text-[10px]" />}
+                      </div>
                     </div>
                     <div className="flex flex-wrap gap-3 mt-2 text-xs text-muted-foreground">
                       {v.ubicacion && <span className="flex items-center gap-1"><MapPin size={12} />{v.ubicacion}</span>}
@@ -161,6 +208,13 @@ export default function Vacantes() {
               <div>
                 <h2 className="font-display text-xl font-semibold">{selected.puesto}</h2>
                 <p className="text-sm text-muted-foreground mt-0.5">{selected.empresas?.razon_social}</p>
+                {tienePerfil && (
+                  <div className="mt-2 inline-flex items-center gap-1.5 text-xs">
+                    <Sparkles size={12} className="text-primary" />
+                    <span className="font-display font-semibold text-foreground">{selected._score ?? 0}% match</span>
+                    <span className="text-muted-foreground">— {matchLabel(selected._score ?? 0).text}</span>
+                  </div>
+                )}
               </div>
               <button onClick={() => setSelected(null)} className="text-muted-foreground hover:text-foreground"><X size={20} /></button>
             </div>
