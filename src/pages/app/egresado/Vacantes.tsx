@@ -291,6 +291,85 @@ export default function Vacantes() {
           </div>
         </div>
       )}
+
+      {showMatcher && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-start sm:items-center justify-center p-2 sm:p-4 overflow-y-auto" onClick={() => setShowMatcher(false)}>
+          <div className="bg-card rounded-xl max-w-2xl w-full my-4 max-h-[calc(100vh-2rem)] flex flex-col shadow-md" onClick={(e) => e.stopPropagation()}>
+            <div className="p-6 border-b border-border flex items-start justify-between shrink-0 bg-gradient-to-r from-primary/10 to-transparent rounded-t-xl">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-primary/15 flex items-center justify-center">
+                  <Wand2 size={18} className="text-primary" />
+                </div>
+                <div>
+                  <h2 className="font-display text-lg font-semibold">Puestos recomendados para ti</h2>
+                  <p className="text-xs text-muted-foreground mt-0.5">Basado en tus habilidades, carrera y experiencia</p>
+                </div>
+              </div>
+              <button onClick={() => setShowMatcher(false)} className="text-muted-foreground hover:text-foreground"><X size={20} /></button>
+            </div>
+
+            <div className="p-6 overflow-y-auto flex-1">
+              {analizando ? (
+                <div className="py-12 text-center">
+                  <Wand2 size={28} className="mx-auto text-primary animate-pulse mb-3" />
+                  <p className="text-sm font-display font-semibold text-foreground">Analizando tu CV...</p>
+                  <p className="text-xs text-muted-foreground mt-1">Comparando con {vacantes.length} vacantes activas</p>
+                </div>
+              ) : (() => {
+                const top = [...vacantesConScore]
+                  .filter((v) => !misPostuladas.has(v.id))
+                  .sort((a, b) => (b._score ?? 0) - (a._score ?? 0))
+                  .slice(0, 5);
+                if (!top.length) return <p className="text-sm text-muted-foreground text-center py-8">No hay vacantes nuevas para analizar.</p>;
+                return (
+                  <div className="space-y-3">
+                    <div className="text-xs text-muted-foreground mb-2">
+                      ✨ Analizamos <strong className="text-foreground">{vacantes.length}</strong> vacantes y estas son tus <strong className="text-foreground">{top.length}</strong> mejores coincidencias:
+                    </div>
+                    {top.map((v, i) => {
+                      const score = v._score ?? 0;
+                      const lbl = matchLabel(score);
+                      const toneCls = lbl.tone === "high" ? "bg-success/15 text-success" : lbl.tone === "mid" ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground";
+                      return (
+                        <button
+                          key={v.id}
+                          onClick={() => { setShowMatcher(false); setSelected(v); }}
+                          className="w-full text-left p-4 rounded-lg border border-border bg-background hover:border-primary/40 hover:shadow-sm transition flex items-start gap-3"
+                        >
+                          <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 font-display font-bold text-primary text-sm">
+                            {i === 0 ? <Trophy size={16} /> : `#${i + 1}`}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="min-w-0">
+                                <p className="font-display font-semibold text-sm text-foreground truncate">{v.puesto}</p>
+                                <p className="text-xs text-muted-foreground truncate">{v.empresas?.razon_social}</p>
+                              </div>
+                              <span className={`inline-flex items-center gap-1 px-2 h-6 rounded-full text-[10px] font-display font-semibold shrink-0 ${toneCls}`}>
+                                <Sparkles size={10} /> {score}%
+                              </span>
+                            </div>
+                            <div className="mt-2 h-1.5 w-full bg-muted rounded-full overflow-hidden">
+                              <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${score}%` }} />
+                            </div>
+                            <div className="flex flex-wrap gap-2 mt-2 text-[11px] text-muted-foreground">
+                              {v.ubicacion && <span className="flex items-center gap-1"><MapPin size={10} />{v.ubicacion}</span>}
+                              <span className="flex items-center gap-1"><Briefcase size={10} />{TIPOS[v.tipo_contrato]}</span>
+                            </div>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
+            </div>
+            <div className="p-4 border-t border-border flex justify-end shrink-0">
+              <button onClick={() => setShowMatcher(false)} className="px-4 h-10 rounded-lg border border-border text-sm font-display hover:bg-secondary">Cerrar</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
