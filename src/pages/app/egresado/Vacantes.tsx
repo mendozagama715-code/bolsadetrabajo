@@ -4,8 +4,9 @@ import { useAuth } from "@/lib/auth-context";
 import { PageHeader } from "@/components/PageHeader";
 import { StatusBadge } from "@/components/StatusBadge";
 import { toast } from "sonner";
-import { Search, MapPin, Briefcase, Building2, X, Sparkles } from "lucide-react";
+import { Search, MapPin, Briefcase, Building2, X, Sparkles, Wand2, Trophy } from "lucide-react";
 import { matchScore, matchLabel, type EgresadoPerfil } from "@/lib/matching";
+import { Link } from "react-router-dom";
 
 interface Vacante {
   id: string;
