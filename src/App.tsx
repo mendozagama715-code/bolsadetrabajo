@@ -12,6 +12,7 @@ import NotFound from "./pages/NotFound.tsx";
 import Auth from "./pages/Auth.tsx";
 import Recuperar from "./pages/Recuperar.tsx";
 import ResetPassword from "./pages/ResetPassword.tsx";
+import Unsubscribe from "./pages/Unsubscribe.tsx";
 import Dashboard from "./pages/app/Dashboard.tsx";
 import PerfilRouter from "./pages/app/PerfilRouter.tsx";
 
@@ -47,6 +48,7 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/recuperar" element={<Recuperar />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/unsubscribe" element={<Unsubscribe />} />
 
             <Route path="/app" element={<Wrapped><Dashboard /></Wrapped>} />
 
