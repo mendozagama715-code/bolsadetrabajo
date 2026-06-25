@@ -82,7 +82,7 @@ Deno.serve(async (req) => {
 
     const { data: vacante, error: vErr } = await supabase
       .from('vacantes')
-      .select('id, puesto, descripcion, requisitos, area, carrera_solicitada, ubicacion, tipo_contrato, empresa_id, empresas(nombre_empresa)')
+      .select('id, puesto, descripcion, requisitos, area, carrera_solicitada, ubicacion, tipo_contrato, empresa_id, empresas(razon_social)')
       .eq('id', vacante_id)
       .maybeSingle()
     if (vErr || !vacante) {
