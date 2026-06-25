@@ -77,6 +77,7 @@ export default function PerfilEgresado() {
         experiencia: experiencia || null,
         habilidades: habilidades ? habilidades.split(",").map((h) => h.trim()).filter(Boolean) : null,
         notif_email_vacantes: notifEmail,
+        notif_push_vacantes: notifPush,
       } as any).eq("id", egresadoId),
     ]);
     setSaving(false);
@@ -85,7 +86,25 @@ export default function PerfilEgresado() {
     refresh();
   };
 
-  const uploadCV = async (file: File) => {
+  const togglePush = async (enable: boolean) => {
+    if (!user) return;
+    setPushBusy(true);
+    try {
+      if (enable) {
+        const r = await ensurePushSubscription(user.id);
+        if (!r.ok) { toast.error(r.reason ?? "No se pudo activar"); return; }
+        await supabase.from("egresados").update({ notif_push_vacantes: true } as any).eq("id", egresadoId!);
+        setNotifPush(true);
+        toast.success("Notificaciones push activadas");
+      } else {
+        await disablePushSubscription(user.id);
+        await supabase.from("egresados").update({ notif_push_vacantes: false } as any).eq("id", egresadoId!);
+        setNotifPush(false);
+        toast.success("Notificaciones push desactivadas");
+      }
+    } finally { setPushBusy(false); }
+  };
+
     if (!user) return;
     if (file.size > 5 * 1024 * 1024) return toast.error("El archivo no debe pesar más de 5MB");
     const ext = file.name.split(".").pop();
