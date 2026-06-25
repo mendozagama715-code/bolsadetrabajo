@@ -27,6 +27,7 @@ export type Database = {
           matricula: string | null
           motivo_rechazo: string | null
           notif_email_vacantes: boolean
+          notif_push_vacantes: boolean
           ubicacion: string | null
           updated_at: string
           user_id: string
@@ -43,6 +44,7 @@ export type Database = {
           matricula?: string | null
           motivo_rechazo?: string | null
           notif_email_vacantes?: boolean
+          notif_push_vacantes?: boolean
           ubicacion?: string | null
           updated_at?: string
           user_id: string
@@ -59,6 +61,7 @@ export type Database = {
           matricula?: string | null
           motivo_rechazo?: string | null
           notif_email_vacantes?: boolean
+          notif_push_vacantes?: boolean
           ubicacion?: string | null
           updated_at?: string
           user_id?: string
@@ -367,6 +370,42 @@ export type Database = {
           nombre?: string
           telefono?: string | null
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      push_tokens: {
+        Row: {
+          auth: string
+          created_at: string
+          endpoint: string
+          id: string
+          last_used_at: string
+          p256dh: string
+          updated_at: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          auth: string
+          created_at?: string
+          endpoint: string
+          id?: string
+          last_used_at?: string
+          p256dh: string
+          updated_at?: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          auth?: string
+          created_at?: string
+          endpoint?: string
+          id?: string
+          last_used_at?: string
+          p256dh?: string
+          updated_at?: string
+          user_agent?: string | null
           user_id?: string
         }
         Relationships: []
