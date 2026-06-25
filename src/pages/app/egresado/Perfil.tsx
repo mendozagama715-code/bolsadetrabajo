@@ -105,6 +105,7 @@ export default function PerfilEgresado() {
     } finally { setPushBusy(false); }
   };
 
+  const uploadCV = async (file: File) => {
     if (!user) return;
     if (file.size > 5 * 1024 * 1024) return toast.error("El archivo no debe pesar más de 5MB");
     const ext = file.name.split(".").pop();
