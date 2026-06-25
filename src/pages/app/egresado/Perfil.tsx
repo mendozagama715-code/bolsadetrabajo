@@ -158,6 +158,23 @@ export default function PerfilEgresado() {
           </span>
         </label>
 
+        <div className="flex items-start gap-3 p-3 bg-secondary/40 rounded-lg">
+          {notifPush ? <Bell size={18} className="mt-0.5 text-primary" /> : <BellOff size={18} className="mt-0.5 text-muted-foreground" />}
+          <div className="flex-1 text-sm">
+            <span className="font-display font-medium text-foreground block">Notificaciones push (navegador / app instalada)</span>
+            <span className="text-xs text-muted-foreground">Recibe avisos instantáneos cuando aparezca una vacante con ≥65% de coincidencia, incluso con la pestaña cerrada.</span>
+            {!isPushSupported() && <span className="block text-xs text-destructive mt-1">Tu navegador no soporta push.</span>}
+          </div>
+          <button
+            type="button"
+            disabled={pushBusy || !isPushSupported()}
+            onClick={() => togglePush(!notifPush)}
+            className="px-3 h-8 rounded-md bg-primary text-primary-foreground text-xs font-display font-medium hover:bg-primary/90 disabled:opacity-50"
+          >
+            {pushBusy ? "..." : notifPush ? "Desactivar" : "Activar"}
+          </button>
+        </div>
+
         <div>
           <label className="font-display text-xs font-semibold text-foreground uppercase tracking-wide block mb-1.5">Currículum (PDF)</label>
           {cvUrl ? (
