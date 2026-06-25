@@ -229,8 +229,8 @@ export default function Postulantes() {
       )}
 
       {selected && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setSelected(null)}>
-          <div className="bg-card rounded-xl max-w-2xl w-full max-h-[85vh] overflow-y-auto shadow-md" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-start sm:items-center justify-center p-2 sm:p-4 overflow-y-auto" onClick={() => setSelected(null)}>
+          <div className="bg-card rounded-xl max-w-2xl w-full my-4 max-h-[calc(100vh-2rem)] overflow-y-auto shadow-md" onClick={(e) => e.stopPropagation()}>
             <div className="p-6 border-b border-border flex items-start justify-between">
               <div>
                 <h2 className="font-display text-xl font-semibold">{selected.egresados?.profiles?.nombre}</h2>
