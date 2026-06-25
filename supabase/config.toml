@@ -20,3 +20,9 @@ verify_jwt = false
 
 [functions.notificar-vacante-nueva]
 verify_jwt = false
+
+[functions.get-vapid-public-key]
+verify_jwt = false
+
+[functions.enviar-push]
+verify_jwt = false
