@@ -26,6 +26,7 @@ export default function PerfilEgresado() {
   const [ubicacion, setUbicacion] = useState("");
   const [experiencia, setExperiencia] = useState("");
   const [habilidades, setHabilidades] = useState("");
+  const [notifEmail, setNotifEmail] = useState(true);
   const [cvUrl, setCvUrl] = useState<string | null>(null);
   const [cvPath, setCvPath] = useState<string | null>(null);
   const loadedFor = useRef<string | null>(null);
@@ -49,6 +50,7 @@ export default function PerfilEgresado() {
       setUbicacion(eRes.data?.ubicacion ?? "");
       setExperiencia(eRes.data?.experiencia ?? "");
       setHabilidades((eRes.data?.habilidades ?? []).join(", "));
+      setNotifEmail((eRes.data as any)?.notif_email_vacantes ?? true);
       setCvPath(eRes.data?.cv_url ?? null);
       if (eRes.data?.cv_url) {
         const { data: signed } = await supabase.storage.from("cvs").createSignedUrl(eRes.data.cv_url, 3600);
@@ -70,7 +72,8 @@ export default function PerfilEgresado() {
         ubicacion: ubicacion || null,
         experiencia: experiencia || null,
         habilidades: habilidades ? habilidades.split(",").map((h) => h.trim()).filter(Boolean) : null,
-      }).eq("id", egresadoId),
+        notif_email_vacantes: notifEmail,
+      } as any).eq("id", egresadoId),
     ]);
     setSaving(false);
     if (p.error || e.error) return toast.error("Error al guardar");
@@ -122,6 +125,14 @@ export default function PerfilEgresado() {
         </div>
         <Field label="Experiencia"><textarea value={experiencia} onChange={(e) => setExperiencia(e.target.value)} rows={4} className={inputCls} /></Field>
         <Field label="Habilidades (separadas por coma)"><input value={habilidades} onChange={(e) => setHabilidades(e.target.value)} placeholder="React, Excel, Liderazgo..." className={inputCls} /></Field>
+
+        <label className="flex items-start gap-3 p-3 bg-secondary/40 rounded-lg cursor-pointer">
+          <input type="checkbox" checked={notifEmail} onChange={(e) => setNotifEmail(e.target.checked)} className="mt-0.5 h-4 w-4 accent-primary" />
+          <span className="text-sm">
+            <span className="font-display font-medium text-foreground block">Recibir vacantes compatibles por correo</span>
+            <span className="text-xs text-muted-foreground">Te avisaremos cuando se publique una vacante con al menos 65% de coincidencia con tu perfil.</span>
+          </span>
+        </label>
 
         <div>
           <label className="font-display text-xs font-semibold text-foreground uppercase tracking-wide block mb-1.5">Currículum (PDF)</label>

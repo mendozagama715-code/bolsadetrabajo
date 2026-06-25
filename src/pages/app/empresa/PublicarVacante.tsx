@@ -32,7 +32,7 @@ export default function PublicarVacante() {
     if (!empresaId) return toast.error("Sin empresa asociada");
     if (!f.puesto || !f.descripcion) return toast.error("Puesto y descripción son obligatorios");
     setSaving(true);
-    const { error } = await supabase.from("vacantes").insert({
+    const { data: nueva, error } = await supabase.from("vacantes").insert({
       empresa_id: empresaId,
       puesto: f.puesto,
       area: f.area || null,
@@ -44,10 +44,15 @@ export default function PublicarVacante() {
       fecha_cierre: f.fecha_cierre || null,
       descripcion: f.descripcion,
       requisitos: f.requisitos || null,
-    });
+    }).select("id").maybeSingle();
     setSaving(false);
     if (error) return toast.error(error.message);
     toast.success("Vacante publicada");
+    // Disparar notificaciones por correo a egresados compatibles (no bloquea la UI)
+    if (nueva?.id) {
+      supabase.functions.invoke("notificar-vacante-nueva", { body: { vacante_id: nueva.id } })
+        .catch((e) => console.error("notif err", e));
+    }
     navigate("/app/mis-vacantes");
   };
 
