@@ -91,43 +91,64 @@ Deno.serve(async (req) => {
       })
     }
 
-    // Egresados que optaron por recibir notificaciones y tienen email
+    // Egresados que optaron por recibir notificaciones (email o push)
     const { data: egresados, error: eErr } = await supabase
       .from('egresados')
-      .select('id, user_id, nombre, email, habilidades, experiencia, carrera, ubicacion')
-      .eq('notif_email_vacantes', true)
+      .select('id, user_id, nombre, email, habilidades, experiencia, carrera, ubicacion, notif_email_vacantes, notif_push_vacantes')
+      .or('notif_email_vacantes.eq.true,notif_push_vacantes.eq.true')
     if (eErr) throw eErr
 
     const empresaNombre = (vacante as any).empresas?.nombre_empresa ?? 'Empresa'
     const vacanteUrl = `${APP_URL}/app/vacantes?v=${vacante.id}`
     let enviados = 0
+    const pushUserIds: string[] = []
 
     for (const eg of egresados ?? []) {
-      if (!eg.email) continue
       const score = matchScore(eg, vacante)
       if (score < MATCH_THRESHOLD) continue
 
-      const { error: sendErr } = await supabase.functions.invoke('send-transactional-email', {
-        body: {
-          templateName: 'vacante-compatible',
-          recipientEmail: eg.email,
-          idempotencyKey: `vacante-${vacante.id}-eg-${eg.id}`,
-          templateData: {
-            nombre: eg.nombre ?? 'Egresado',
-            puesto: vacante.puesto,
-            empresa: empresaNombre,
-            ubicacion: vacante.ubicacion,
-            tipo_contrato: vacante.tipo_contrato,
-            score,
-            vacante_url: vacanteUrl,
+      if ((eg as any).notif_email_vacantes && eg.email) {
+        const { error: sendErr } = await supabase.functions.invoke('send-transactional-email', {
+          body: {
+            templateName: 'vacante-compatible',
+            recipientEmail: eg.email,
+            idempotencyKey: `vacante-${vacante.id}-eg-${eg.id}`,
+            templateData: {
+              nombre: eg.nombre ?? 'Egresado',
+              puesto: vacante.puesto,
+              empresa: empresaNombre,
+              ubicacion: vacante.ubicacion,
+              tipo_contrato: vacante.tipo_contrato,
+              score,
+              vacante_url: vacanteUrl,
+            },
           },
-        },
-      })
-      if (!sendErr) enviados++
-      else console.error('send err', eg.email, sendErr)
+        })
+        if (!sendErr) enviados++
+        else console.error('send err', eg.email, sendErr)
+      }
+
+      if ((eg as any).notif_push_vacantes && eg.user_id) {
+        pushUserIds.push(eg.user_id)
+      }
     }
 
-    return new Response(JSON.stringify({ ok: true, enviados, total: egresados?.length ?? 0 }), {
+    let pushSent = 0
+    if (pushUserIds.length) {
+      const { data: pushRes, error: pushErr } = await supabase.functions.invoke('enviar-push', {
+        body: {
+          user_ids: pushUserIds,
+          title: `Nueva vacante compatible: ${vacante.puesto}`,
+          body: `${empresaNombre} • ${vacante.ubicacion ?? ''}`.trim(),
+          url: `/app/vacantes?v=${vacante.id}`,
+          tag: `vacante-${vacante.id}`,
+        },
+      })
+      if (pushErr) console.error('push invoke err', pushErr)
+      else pushSent = (pushRes as any)?.sent ?? 0
+    }
+
+    return new Response(JSON.stringify({ ok: true, enviados, push_enviados: pushSent, total: egresados?.length ?? 0 }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   } catch (e) {
