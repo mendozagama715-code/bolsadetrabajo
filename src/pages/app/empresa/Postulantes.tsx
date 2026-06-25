@@ -176,35 +176,61 @@ export default function Postulantes() {
           <p className="text-sm text-muted-foreground">No hay postulantes con estos filtros</p>
         </div>
       ) : (
-        <div className="bg-card border border-border rounded-xl shadow-card overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="bg-secondary/50">
-              <tr className="text-left text-xs font-display text-muted-foreground uppercase">
-                <th className="px-4 py-3">Candidato</th>
-                <th className="px-4 py-3">Vacante</th>
-                <th className="px-4 py-3">Carrera</th>
-                <th className="px-4 py-3">Fecha</th>
-                <th className="px-4 py-3">Estado</th>
-              </tr>
-            </thead>
-            <tbody>
-              {items.map((p) => (
-                <tr key={p.id} className="border-t border-border hover:bg-secondary/30 cursor-pointer" onClick={() => openDetail(p)}>
-                  <td className="px-4 py-3 font-medium">{p.egresados?.profiles?.nombre ?? "—"}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{p.vacantes?.puesto ?? "—"}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{p.egresados?.carrera ?? "—"}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{new Date(p.created_at).toLocaleDateString()}</td>
-                  <td className="px-4 py-3"><StatusBadge estado={p.estado} /></td>
+        <>
+          {/* Tabla — desktop */}
+          <div className="hidden md:block bg-card border border-border rounded-xl shadow-card overflow-hidden">
+            <table className="w-full text-sm">
+              <thead className="bg-secondary/50">
+                <tr className="text-left text-xs font-display text-muted-foreground uppercase">
+                  <th className="px-4 py-3">Candidato</th>
+                  <th className="px-4 py-3">Vacante</th>
+                  <th className="px-4 py-3">Carrera</th>
+                  <th className="px-4 py-3">Fecha</th>
+                  <th className="px-4 py-3">Estado</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {items.map((p) => (
+                  <tr key={p.id} className="border-t border-border hover:bg-secondary/30 cursor-pointer" onClick={() => openDetail(p)}>
+                    <td className="px-4 py-3 font-medium">{p.egresados?.profiles?.nombre ?? "—"}</td>
+                    <td className="px-4 py-3 text-muted-foreground">{p.vacantes?.puesto ?? "—"}</td>
+                    <td className="px-4 py-3 text-muted-foreground">{p.egresados?.carrera ?? "—"}</td>
+                    <td className="px-4 py-3 text-muted-foreground">{new Date(p.created_at).toLocaleDateString()}</td>
+                    <td className="px-4 py-3"><StatusBadge estado={p.estado} /></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Tarjetas — móvil */}
+          <div className="md:hidden grid gap-3">
+            {items.map((p) => (
+              <button
+                key={p.id}
+                onClick={() => openDetail(p)}
+                className="w-full text-left bg-card border border-border rounded-xl p-4 shadow-card hover:border-primary/40 transition"
+              >
+                <div className="flex items-start justify-between gap-3 mb-2">
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-display font-semibold text-foreground text-sm truncate">{p.egresados?.profiles?.nombre ?? "—"}</h3>
+                    <p className="text-xs text-muted-foreground truncate">{p.vacantes?.puesto ?? "—"}</p>
+                  </div>
+                  <StatusBadge estado={p.estado} />
+                </div>
+                <div className="flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
+                  {p.egresados?.carrera && <span>{p.egresados.carrera}</span>}
+                  <span>{new Date(p.created_at).toLocaleDateString()}</span>
+                </div>
+              </button>
+            ))}
+          </div>
+        </>
       )}
 
       {selected && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setSelected(null)}>
-          <div className="bg-card rounded-xl max-w-2xl w-full max-h-[85vh] overflow-y-auto shadow-md" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-start sm:items-center justify-center p-2 sm:p-4 overflow-y-auto" onClick={() => setSelected(null)}>
+          <div className="bg-card rounded-xl max-w-2xl w-full my-4 max-h-[calc(100vh-2rem)] overflow-y-auto shadow-md" onClick={(e) => e.stopPropagation()}>
             <div className="p-6 border-b border-border flex items-start justify-between">
               <div>
                 <h2 className="font-display text-xl font-semibold">{selected.egresados?.profiles?.nombre}</h2>
