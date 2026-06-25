@@ -98,7 +98,7 @@ Deno.serve(async (req) => {
       .or('notif_email_vacantes.eq.true,notif_push_vacantes.eq.true')
     if (eErr) throw eErr
 
-    const empresaNombre = (vacante as any).empresas?.nombre_empresa ?? 'Empresa'
+    const empresaNombre = (vacante as any).empresas?.razon_social ?? 'Empresa'
     const vacanteUrl = `${APP_URL}/app/vacantes?v=${vacante.id}`
     let enviados = 0
     const pushUserIds: string[] = []
