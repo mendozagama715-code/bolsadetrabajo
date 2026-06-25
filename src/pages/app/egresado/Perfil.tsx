@@ -3,7 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { PageHeader } from "@/components/PageHeader";
 import { toast } from "sonner";
-import { Upload, FileText, Trash2 } from "lucide-react";
+import { Upload, FileText, Trash2, Bell, BellOff } from "lucide-react";
+import { ensurePushSubscription, disablePushSubscription, isPushSupported } from "@/lib/push";
 
 const CARRERAS = [
   "Ingeniería en Desarrollo Sustentable con Orientación en Veterinaria y Zootecnia",
@@ -27,6 +28,8 @@ export default function PerfilEgresado() {
   const [experiencia, setExperiencia] = useState("");
   const [habilidades, setHabilidades] = useState("");
   const [notifEmail, setNotifEmail] = useState(true);
+  const [notifPush, setNotifPush] = useState(false);
+  const [pushBusy, setPushBusy] = useState(false);
   const [cvUrl, setCvUrl] = useState<string | null>(null);
   const [cvPath, setCvPath] = useState<string | null>(null);
   const loadedFor = useRef<string | null>(null);
@@ -51,6 +54,7 @@ export default function PerfilEgresado() {
       setExperiencia(eRes.data?.experiencia ?? "");
       setHabilidades((eRes.data?.habilidades ?? []).join(", "));
       setNotifEmail((eRes.data as any)?.notif_email_vacantes ?? true);
+      setNotifPush((eRes.data as any)?.notif_push_vacantes ?? false);
       setCvPath(eRes.data?.cv_url ?? null);
       if (eRes.data?.cv_url) {
         const { data: signed } = await supabase.storage.from("cvs").createSignedUrl(eRes.data.cv_url, 3600);
