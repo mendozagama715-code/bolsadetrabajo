@@ -26,6 +26,7 @@ export type Database = {
           id: string
           matricula: string | null
           motivo_rechazo: string | null
+          notif_email_vacantes: boolean
           ubicacion: string | null
           updated_at: string
           user_id: string
@@ -41,6 +42,7 @@ export type Database = {
           id?: string
           matricula?: string | null
           motivo_rechazo?: string | null
+          notif_email_vacantes?: boolean
           ubicacion?: string | null
           updated_at?: string
           user_id: string
@@ -56,6 +58,7 @@ export type Database = {
           id?: string
           matricula?: string | null
           motivo_rechazo?: string | null
+          notif_email_vacantes?: boolean
           ubicacion?: string | null
           updated_at?: string
           user_id?: string

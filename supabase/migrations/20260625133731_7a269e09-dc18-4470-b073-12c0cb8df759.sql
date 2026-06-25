@@ -1,0 +1,1 @@
+ALTER TABLE public.egresados ADD COLUMN IF NOT EXISTS notif_email_vacantes boolean NOT NULL DEFAULT true;
