@@ -3,7 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { PageHeader } from "@/components/PageHeader";
 import { toast } from "sonner";
-import { Upload, FileText, Trash2 } from "lucide-react";
+import { Upload, FileText, Trash2, Bell, BellOff } from "lucide-react";
+import { ensurePushSubscription, disablePushSubscription, isPushSupported } from "@/lib/push";
 
 const CARRERAS = [
   "Ingeniería en Desarrollo Sustentable con Orientación en Veterinaria y Zootecnia",
@@ -27,6 +28,8 @@ export default function PerfilEgresado() {
   const [experiencia, setExperiencia] = useState("");
   const [habilidades, setHabilidades] = useState("");
   const [notifEmail, setNotifEmail] = useState(true);
+  const [notifPush, setNotifPush] = useState(false);
+  const [pushBusy, setPushBusy] = useState(false);
   const [cvUrl, setCvUrl] = useState<string | null>(null);
   const [cvPath, setCvPath] = useState<string | null>(null);
   const loadedFor = useRef<string | null>(null);
@@ -51,6 +54,7 @@ export default function PerfilEgresado() {
       setExperiencia(eRes.data?.experiencia ?? "");
       setHabilidades((eRes.data?.habilidades ?? []).join(", "));
       setNotifEmail((eRes.data as any)?.notif_email_vacantes ?? true);
+      setNotifPush((eRes.data as any)?.notif_push_vacantes ?? false);
       setCvPath(eRes.data?.cv_url ?? null);
       if (eRes.data?.cv_url) {
         const { data: signed } = await supabase.storage.from("cvs").createSignedUrl(eRes.data.cv_url, 3600);
@@ -73,12 +77,32 @@ export default function PerfilEgresado() {
         experiencia: experiencia || null,
         habilidades: habilidades ? habilidades.split(",").map((h) => h.trim()).filter(Boolean) : null,
         notif_email_vacantes: notifEmail,
+        notif_push_vacantes: notifPush,
       } as any).eq("id", egresadoId),
     ]);
     setSaving(false);
     if (p.error || e.error) return toast.error("Error al guardar");
     toast.success("Perfil actualizado");
     refresh();
+  };
+
+  const togglePush = async (enable: boolean) => {
+    if (!user) return;
+    setPushBusy(true);
+    try {
+      if (enable) {
+        const r = await ensurePushSubscription(user.id);
+        if (!r.ok) { toast.error(r.reason ?? "No se pudo activar"); return; }
+        await supabase.from("egresados").update({ notif_push_vacantes: true } as any).eq("id", egresadoId!);
+        setNotifPush(true);
+        toast.success("Notificaciones push activadas");
+      } else {
+        await disablePushSubscription(user.id);
+        await supabase.from("egresados").update({ notif_push_vacantes: false } as any).eq("id", egresadoId!);
+        setNotifPush(false);
+        toast.success("Notificaciones push desactivadas");
+      }
+    } finally { setPushBusy(false); }
   };
 
   const uploadCV = async (file: File) => {
@@ -133,6 +157,23 @@ export default function PerfilEgresado() {
             <span className="text-xs text-muted-foreground">Te avisaremos cuando se publique una vacante con al menos 65% de coincidencia con tu perfil.</span>
           </span>
         </label>
+
+        <div className="flex items-start gap-3 p-3 bg-secondary/40 rounded-lg">
+          {notifPush ? <Bell size={18} className="mt-0.5 text-primary" /> : <BellOff size={18} className="mt-0.5 text-muted-foreground" />}
+          <div className="flex-1 text-sm">
+            <span className="font-display font-medium text-foreground block">Notificaciones push (navegador / app instalada)</span>
+            <span className="text-xs text-muted-foreground">Recibe avisos instantáneos cuando aparezca una vacante con ≥65% de coincidencia, incluso con la pestaña cerrada.</span>
+            {!isPushSupported() && <span className="block text-xs text-destructive mt-1">Tu navegador no soporta push.</span>}
+          </div>
+          <button
+            type="button"
+            disabled={pushBusy || !isPushSupported()}
+            onClick={() => togglePush(!notifPush)}
+            className="px-3 h-8 rounded-md bg-primary text-primary-foreground text-xs font-display font-medium hover:bg-primary/90 disabled:opacity-50"
+          >
+            {pushBusy ? "..." : notifPush ? "Desactivar" : "Activar"}
+          </button>
+        </div>
 
         <div>
           <label className="font-display text-xs font-semibold text-foreground uppercase tracking-wide block mb-1.5">Currículum (PDF)</label>
