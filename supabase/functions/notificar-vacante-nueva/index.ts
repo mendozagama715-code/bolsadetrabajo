@@ -82,7 +82,7 @@ Deno.serve(async (req) => {
 
     const { data: vacante, error: vErr } = await supabase
       .from('vacantes')
-      .select('id, puesto, descripcion, requisitos, area, carrera_solicitada, ubicacion, tipo_contrato, empresa_id, empresas(nombre_empresa)')
+      .select('id, puesto, descripcion, requisitos, area, carrera_solicitada, ubicacion, tipo_contrato, empresa_id, empresas(razon_social)')
       .eq('id', vacante_id)
       .maybeSingle()
     if (vErr || !vacante) {
@@ -94,27 +94,46 @@ Deno.serve(async (req) => {
     // Egresados que optaron por recibir notificaciones (email o push)
     const { data: egresados, error: eErr } = await supabase
       .from('egresados')
-      .select('id, user_id, nombre, email, habilidades, experiencia, carrera, ubicacion, notif_email_vacantes, notif_push_vacantes')
+      .select('id, user_id, habilidades, experiencia, carrera, ubicacion, notif_email_vacantes, notif_push_vacantes')
       .or('notif_email_vacantes.eq.true,notif_push_vacantes.eq.true')
     if (eErr) throw eErr
 
-    const empresaNombre = (vacante as any).empresas?.nombre_empresa ?? 'Empresa'
+    const empresaNombre = (vacante as any).empresas?.razon_social ?? 'Empresa'
     const vacanteUrl = `${APP_URL}/app/vacantes?v=${vacante.id}`
     let enviados = 0
     const pushUserIds: string[] = []
+
+    // Resolver email y nombre desde auth.users y profiles
+    const userIds = (egresados ?? []).map((e: any) => e.user_id).filter(Boolean)
+    const emailMap = new Map<string, string>()
+    const nombreMap = new Map<string, string>()
+    if (userIds.length) {
+      const { data: profs } = await supabase.from('profiles').select('user_id, nombre').in('user_id', userIds)
+      for (const p of profs ?? []) nombreMap.set((p as any).user_id, (p as any).nombre ?? 'Egresado')
+      // emails desde auth.admin
+      for (const uid of userIds) {
+        try {
+          const { data: u } = await (supabase as any).auth.admin.getUserById(uid)
+          if (u?.user?.email) emailMap.set(uid, u.user.email)
+        } catch (_) { /* ignore */ }
+      }
+    }
 
     for (const eg of egresados ?? []) {
       const score = matchScore(eg, vacante)
       if (score < MATCH_THRESHOLD) continue
 
-      if ((eg as any).notif_email_vacantes && eg.email) {
+      const egEmail = emailMap.get((eg as any).user_id)
+      const egNombre = nombreMap.get((eg as any).user_id) ?? 'Egresado'
+
+      if ((eg as any).notif_email_vacantes && egEmail) {
         const { error: sendErr } = await supabase.functions.invoke('send-transactional-email', {
           body: {
             templateName: 'vacante-compatible',
-            recipientEmail: eg.email,
+            recipientEmail: egEmail,
             idempotencyKey: `vacante-${vacante.id}-eg-${eg.id}`,
             templateData: {
-              nombre: eg.nombre ?? 'Egresado',
+              nombre: egNombre,
               puesto: vacante.puesto,
               empresa: empresaNombre,
               ubicacion: vacante.ubicacion,
@@ -125,13 +144,14 @@ Deno.serve(async (req) => {
           },
         })
         if (!sendErr) enviados++
-        else console.error('send err', eg.email, sendErr)
+        else console.error('send err', egEmail, sendErr)
       }
 
       if ((eg as any).notif_push_vacantes && eg.user_id) {
         pushUserIds.push(eg.user_id)
       }
     }
+
 
     let pushSent = 0
     if (pushUserIds.length) {
