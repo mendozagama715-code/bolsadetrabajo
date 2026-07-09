@@ -15,6 +15,7 @@ import ResetPassword from "./pages/ResetPassword.tsx";
 import Unsubscribe from "./pages/Unsubscribe.tsx";
 import Dashboard from "./pages/app/Dashboard.tsx";
 import PerfilRouter from "./pages/app/PerfilRouter.tsx";
+import TestRLS from "./pages/app/TestRLS.tsx";
 
 import Vacantes from "./pages/app/egresado/Vacantes.tsx";
 import Postulaciones from "./pages/app/egresado/Postulaciones.tsx";
@@ -70,6 +71,7 @@ const App = () => (
             <Route path="/app/admin/crear-admin" element={<Wrapped><RequireRole roles={["admin","super_admin"]}><CrearAdmin /></RequireRole></Wrapped>} />
 
             <Route path="/app/perfil" element={<Wrapped><PerfilRouter /></Wrapped>} />
+            <Route path="/app/test-rls" element={<Wrapped><TestRLS /></Wrapped>} />
 
             <Route path="*" element={<NotFound />} />
           </Routes>

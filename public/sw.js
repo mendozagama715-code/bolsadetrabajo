@@ -1,7 +1,24 @@
-// Service worker para Web Push (VAPID). NO cachea assets: solo notificaciones.
-self.addEventListener("install", (e) => self.skipWaiting());
+// ============================================================================
+// Service Worker: Push notifications + Background Sync de vacantes/postulaciones
+// ----------------------------------------------------------------------------
+// CICLO DE VIDA:
+//  1. Registro: src/lib/offline-queue.ts llama navigator.serviceWorker.register('/sw.js')
+//  2. Cuando el usuario ejecuta una acción sin conexión, el cliente:
+//       a) guarda la petición en IndexedDB (store 'queue')
+//       b) llama registration.sync.register('sync-vacantes')
+//  3. Cuando vuelve la red, el navegador dispara el evento 'sync' AQUÍ.
+//     Aunque la pestaña esté cerrada, el SW abre IndexedDB, lee la cola y
+//     hace fetch() a Supabase REST. Si falla, throw hace que el navegador
+//     reintente automáticamente con backoff.
+//  4. Al terminar cada envío exitoso, mostramos una Notification confirmando.
+//  5. Fallback (Safari/iOS sin SyncManager): el cliente escucha 'online' y
+//     envía postMessage({type:'drain-queue'}) para que el SW procese la cola.
+// ============================================================================
+
+self.addEventListener("install", () => self.skipWaiting());
 self.addEventListener("activate", (e) => e.waitUntil(self.clients.claim()));
 
+// -------------------- Push (sin cambios) --------------------
 self.addEventListener("push", (event) => {
   let data = {};
   try { data = event.data ? event.data.json() : {}; } catch { data = { title: "Notificación", body: event.data && event.data.text() }; }
@@ -27,4 +44,97 @@ self.addEventListener("notificationclick", (event) => {
       if (self.clients.openWindow) return self.clients.openWindow(url);
     })
   );
+});
+
+// -------------------- IndexedDB helpers (mismo esquema que el cliente) --------------------
+const DB_NAME = "bt-offline";
+const STORE = "queue";
+
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, 1);
+    req.onupgradeneeded = () => {
+      const db = req.result;
+      if (!db.objectStoreNames.contains(STORE)) {
+        db.createObjectStore(STORE, { keyPath: "id", autoIncrement: true });
+      }
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function readAll() {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE, "readonly");
+    const req = tx.objectStore(STORE).getAll();
+    req.onsuccess = () => resolve(req.result || []);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function removeItem(id) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE, "readwrite");
+    tx.objectStore(STORE).delete(id);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+// -------------------- Drenado de la cola --------------------
+async function drainQueue() {
+  const items = await readAll();
+  let ok = 0, fail = 0;
+  for (const item of items) {
+    try {
+      const res = await fetch(item.url, {
+        method: item.method,
+        headers: item.headers,
+        body: item.body ? JSON.stringify(item.body) : undefined,
+      });
+      if (!res.ok) {
+        // 4xx: no vale la pena reintentar (RLS, validación). Descartamos.
+        if (res.status >= 400 && res.status < 500) {
+          await removeItem(item.id);
+          await self.registration.showNotification("Acción rechazada", {
+            body: `${item.label || "Operación"} no se pudo aplicar (${res.status}).`,
+            icon: "/icon-192.png",
+            tag: `sync-fail-${item.id}`,
+          });
+          fail++;
+          continue;
+        }
+        throw new Error(`HTTP ${res.status}`);
+      }
+      await removeItem(item.id);
+      ok++;
+      await self.registration.showNotification("Sincronizado ✓", {
+        body: `${item.label || "Operación"} enviada correctamente.`,
+        icon: "/icon-192.png",
+        tag: `sync-ok-${item.id}`,
+      });
+    } catch (err) {
+      // Re-lanzamos para que Background Sync reintente con backoff.
+      fail++;
+      throw err;
+    }
+  }
+  return { ok, fail };
+}
+
+// Evento nativo del navegador cuando vuelve la conexión.
+self.addEventListener("sync", (event) => {
+  if (event.tag === "sync-vacantes") {
+    event.waitUntil(drainQueue());
+  }
+});
+
+// Fallback: el cliente pide drenar manualmente (Safari/iOS al detectar 'online').
+self.addEventListener("message", (event) => {
+  if (event.data && event.data.type === "drain-queue") {
+    event.waitUntil(drainQueue().catch(() => {}));
+  }
 });

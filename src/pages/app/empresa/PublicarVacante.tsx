@@ -4,6 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { PageHeader } from "@/components/PageHeader";
 import { toast } from "sonner";
+import { friendlyError } from "@/lib/rls-error";
+import { enqueueSupabaseAction } from "@/lib/offline-queue";
 
 const inputCls = "w-full px-3 h-10 bg-background border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30";
 
@@ -17,7 +19,7 @@ const CARRERAS = [
 ];
 
 export default function PublicarVacante() {
-  const { empresaId } = useAuth();
+  const { empresaId, session } = useAuth();
   const navigate = useNavigate();
   const [saving, setSaving] = useState(false);
   const [f, setF] = useState({
@@ -32,7 +34,7 @@ export default function PublicarVacante() {
     if (!empresaId) return toast.error("Sin empresa asociada");
     if (!f.puesto || !f.descripcion) return toast.error("Puesto y descripción son obligatorios");
     setSaving(true);
-    const { data: nueva, error } = await supabase.from("vacantes").insert({
+    const payload = {
       empresa_id: empresaId,
       puesto: f.puesto,
       area: f.area || null,
@@ -44,11 +46,27 @@ export default function PublicarVacante() {
       fecha_cierre: f.fecha_cierre || null,
       descripcion: f.descripcion,
       requisitos: f.requisitos || null,
-    }).select("id").maybeSingle();
+    };
+
+    // Sin conexión: encolar en IndexedDB, el SW la enviará al reconectar.
+    if (!navigator.onLine && session?.access_token) {
+      await enqueueSupabaseAction({
+        table: "vacantes",
+        method: "POST",
+        body: payload,
+        label: `Vacante: ${f.puesto}`,
+        accessToken: session.access_token,
+      });
+      setSaving(false);
+      toast.success("Sin conexión. La vacante se enviará automáticamente al reconectar.");
+      navigate("/app/mis-vacantes");
+      return;
+    }
+
+    const { data: nueva, error } = await supabase.from("vacantes").insert(payload).select("id").maybeSingle();
     setSaving(false);
-    if (error) return toast.error(error.message);
+    if (error) return toast.error(friendlyError(error));
     toast.success("Vacante publicada");
-    // Disparar notificaciones por correo a egresados compatibles (no bloquea la UI)
     if (nueva?.id) {
       supabase.functions.invoke("notificar-vacante-nueva", { body: { vacante_id: nueva.id } })
         .catch((e) => console.error("notif err", e));
