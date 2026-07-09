@@ -71,6 +71,7 @@ const App = () => (
             <Route path="/app/admin/crear-admin" element={<Wrapped><RequireRole roles={["admin","super_admin"]}><CrearAdmin /></RequireRole></Wrapped>} />
 
             <Route path="/app/perfil" element={<Wrapped><PerfilRouter /></Wrapped>} />
+            <Route path="/app/test-rls" element={<Wrapped><TestRLS /></Wrapped>} />
 
             <Route path="*" element={<NotFound />} />
           </Routes>
