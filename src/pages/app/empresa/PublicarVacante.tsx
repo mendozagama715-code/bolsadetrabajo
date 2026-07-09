@@ -19,7 +19,7 @@ const CARRERAS = [
 ];
 
 export default function PublicarVacante() {
-  const { empresaId } = useAuth();
+  const { empresaId, session } = useAuth();
   const navigate = useNavigate();
   const [saving, setSaving] = useState(false);
   const [f, setF] = useState({
