@@ -15,6 +15,7 @@ import ResetPassword from "./pages/ResetPassword.tsx";
 import Unsubscribe from "./pages/Unsubscribe.tsx";
 import Dashboard from "./pages/app/Dashboard.tsx";
 import PerfilRouter from "./pages/app/PerfilRouter.tsx";
+import TestRLS from "./pages/app/TestRLS.tsx";
 
 import Vacantes from "./pages/app/egresado/Vacantes.tsx";
 import Postulaciones from "./pages/app/egresado/Postulaciones.tsx";
