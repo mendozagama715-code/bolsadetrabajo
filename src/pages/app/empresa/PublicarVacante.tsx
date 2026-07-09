@@ -4,6 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { PageHeader } from "@/components/PageHeader";
 import { toast } from "sonner";
+import { friendlyError } from "@/lib/rls-error";
+import { enqueueSupabaseAction } from "@/lib/offline-queue";
 
 const inputCls = "w-full px-3 h-10 bg-background border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30";
 
