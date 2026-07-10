@@ -1,27 +1,14 @@
-// ============================================================================
-// Service Worker: Push notifications + Background Sync de vacantes/postulaciones
-// ----------------------------------------------------------------------------
-// CICLO DE VIDA:
-//  1. Registro: src/lib/offline-queue.ts llama navigator.serviceWorker.register('/sw.js')
-//  2. Cuando el usuario ejecuta una acción sin conexión, el cliente:
-//       a) guarda la petición en IndexedDB (store 'queue')
-//       b) llama registration.sync.register('sync-vacantes')
-//  3. Cuando vuelve la red, el navegador dispara el evento 'sync' AQUÍ.
-//     Aunque la pestaña esté cerrada, el SW abre IndexedDB, lee la cola y
-//     hace fetch() a Supabase REST. Si falla, throw hace que el navegador
-//     reintente automáticamente con backoff.
-//  4. Al terminar cada envío exitoso, mostramos una Notification confirmando.
-//  5. Fallback (Safari/iOS sin SyncManager): el cliente escucha 'online' y
-//     envía postMessage({type:'drain-queue'}) para que el SW procese la cola.
-// ============================================================================
-
 self.addEventListener("install", () => self.skipWaiting());
 self.addEventListener("activate", (e) => e.waitUntil(self.clients.claim()));
 
 // -------------------- Push (sin cambios) --------------------
 self.addEventListener("push", (event) => {
   let data = {};
-  try { data = event.data ? event.data.json() : {}; } catch { data = { title: "Notificación", body: event.data && event.data.text() }; }
+  try {
+    data = event.data ? event.data.json() : {};
+  } catch {
+    data = { title: "Notificación", body: event.data && event.data.text() };
+  }
   const title = data.title || "Bolsa de Trabajo UIEPCh";
   const options = {
     body: data.body || "",
@@ -39,10 +26,13 @@ self.addEventListener("notificationclick", (event) => {
   event.waitUntil(
     self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clients) => {
       for (const c of clients) {
-        if ("focus" in c) { c.navigate(url); return c.focus(); }
+        if ("focus" in c) {
+          c.navigate(url);
+          return c.focus();
+        }
       }
       if (self.clients.openWindow) return self.clients.openWindow(url);
-    })
+    }),
   );
 });
 
@@ -87,7 +77,8 @@ async function removeItem(id) {
 // -------------------- Drenado de la cola --------------------
 async function drainQueue() {
   const items = await readAll();
-  let ok = 0, fail = 0;
+  let ok = 0,
+    fail = 0;
   for (const item of items) {
     try {
       const res = await fetch(item.url, {
