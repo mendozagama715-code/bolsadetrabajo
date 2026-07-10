@@ -7,11 +7,6 @@ import { enqueueSupabaseAction, queueLength } from "@/lib/offline-queue";
 import { toast } from "sonner";
 import { ShieldCheck, ShieldAlert, WifiOff } from "lucide-react";
 
-/**
- * Pantalla de EVIDENCIA para la tesis.
- * Ejecuta acciones que DEBEN ser bloqueadas por RLS según el rol actual
- * y muestra la respuesta cruda del servidor + el mensaje amigable.
- */
 interface Result {
   label: string;
   ok: boolean;
@@ -62,7 +57,10 @@ export default function TestRLS() {
 
     // 3) Intentar borrar una vacante ajena (id aleatorio).
     {
-      const { error, count } = await supabase.from("vacantes").delete({ count: "exact" }).eq("id", "00000000-0000-0000-0000-000000000000");
+      const { error, count } = await supabase
+        .from("vacantes")
+        .delete({ count: "exact" })
+        .eq("id", "00000000-0000-0000-0000-000000000000");
       push({
         label: "Borrar vacante ajena",
         ok: !error && (count ?? 0) > 0,
@@ -120,27 +118,44 @@ export default function TestRLS() {
 
       <div className="bg-card border border-border rounded-xl p-6 shadow-card space-y-4">
         <p className="text-sm text-muted-foreground">
-          Esta pantalla ejecuta acciones que <strong>no deberían</strong> estar permitidas para tu rol.
-          Sirve como evidencia de que la seguridad está aplicada en el servidor (Postgres RLS),
-          no solo escondiendo botones en la interfaz.
+          Esta pantalla ejecuta acciones que <strong>no deberían</strong> estar permitidas para tu rol. Sirve como
+          evidencia de que la seguridad está aplicada en el servidor (Postgres RLS), no solo escondiendo botones en la
+          interfaz.
         </p>
 
         <div className="flex flex-wrap gap-2">
-          <button onClick={runTests} disabled={running} className="px-4 h-10 rounded-lg bg-primary text-primary-foreground text-sm font-display font-medium disabled:opacity-50">
+          <button
+            onClick={runTests}
+            disabled={running}
+            className="px-4 h-10 rounded-lg bg-primary text-primary-foreground text-sm font-display font-medium disabled:opacity-50"
+          >
             {running ? "Ejecutando..." : "Ejecutar pruebas RLS"}
           </button>
-          <button onClick={simularOffline} className="px-4 h-10 rounded-lg border border-border text-sm font-display hover:bg-secondary inline-flex items-center gap-2">
+          <button
+            onClick={simularOffline}
+            className="px-4 h-10 rounded-lg border border-border text-sm font-display hover:bg-secondary inline-flex items-center gap-2"
+          >
             <WifiOff size={16} /> Encolar acción (offline)
           </button>
-          <button onClick={refreshQ} className="px-4 h-10 rounded-lg border border-border text-sm font-display hover:bg-secondary">
+          <button
+            onClick={refreshQ}
+            className="px-4 h-10 rounded-lg border border-border text-sm font-display hover:bg-secondary"
+          >
             Ver cola ({qLen})
           </button>
         </div>
 
         <div className="space-y-2">
           {results.map((r, i) => (
-            <div key={i} className={`p-4 rounded-lg border flex items-start gap-3 ${r.ok ? "border-destructive/40 bg-destructive/5" : "border-emerald-500/40 bg-emerald-500/5"}`}>
-              {r.ok ? <ShieldAlert className="text-destructive shrink-0" /> : <ShieldCheck className="text-emerald-600 shrink-0" />}
+            <div
+              key={i}
+              className={`p-4 rounded-lg border flex items-start gap-3 ${r.ok ? "border-destructive/40 bg-destructive/5" : "border-emerald-500/40 bg-emerald-500/5"}`}
+            >
+              {r.ok ? (
+                <ShieldAlert className="text-destructive shrink-0" />
+              ) : (
+                <ShieldCheck className="text-emerald-600 shrink-0" />
+              )}
               <div className="min-w-0 flex-1">
                 <div className="font-display font-semibold text-sm">{r.label}</div>
                 <div className="text-sm mt-1">{r.detail}</div>
