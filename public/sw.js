@@ -1,7 +1,6 @@
 self.addEventListener("install", () => self.skipWaiting());
 self.addEventListener("activate", (e) => e.waitUntil(self.clients.claim()));
 
-// -------------------- Push (sin cambios) --------------------
 self.addEventListener("push", (event) => {
   let data = {};
   try {
